@@ -3,6 +3,7 @@ Provides a simple interface for getting ARKit values from visionOS
 
 example usage:
 
+```
 struct ImmersiveView: View {
     var body: some View {
         RealityView { content in
@@ -23,3 +24,4 @@ struct ImmersiveView: View {
             }
         }
     }
+```
