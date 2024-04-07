@@ -17,9 +17,6 @@ public class ARUnderstanding {
     private(set) var providers: [ARProvider]
     public var errorState = false
     
-    var contentEntity = Entity()
-    var homeEntity = Entity()
-
     public init(providers: [ARProvider], logger: Logger? = nil) {
         self.providers = providers
         if let logger {
@@ -27,13 +24,12 @@ public class ARUnderstanding {
         }
     }
     
-    private func runSession() async throws {
-        try await session.run(providers.map(\.dataProvider))
+    public convenience init(providers: [ARPoviderDefinition], logger: Logger? = nil) {
+        self.init(providers: providers.map(\.provider), logger: logger)
     }
     
-    private func setupContentEntity() -> Entity {
-        contentEntity.addChild(homeEntity)
-        return contentEntity
+    private func runSession() async throws {
+        try await session.run(providers.map(\.dataProvider))
     }
     
     private var dataProvidersAreSupported: Bool {
@@ -52,6 +48,86 @@ public class ARUnderstanding {
         }
     }
     
+    public static var handUpdates: AsyncStream<HandAnchor> {
+        AsyncStream { continuation in
+            Task {
+                for await anchor in ARUnderstanding(providers: [.hands]).anchorUpdates {
+                    switch anchor {
+                    case .hand(let handAnchor):
+                        continuation.yield(handAnchor)
+                    default:
+                        break
+                    }
+                }
+                continuation.finish()
+            }
+        }
+    }
+
+    public static var planeUpdates: AsyncStream<PlaneAnchor> {
+        AsyncStream { continuation in
+            Task {
+                for await anchor in ARUnderstanding(providers: [.planes]).anchorUpdates {
+                    switch anchor {
+                    case .plane(let planeAnchor):
+                        continuation.yield(planeAnchor)
+                    default:
+                        break
+                    }
+                }
+                continuation.finish()
+            }
+        }
+    }
+
+    public static var meshUpdates: AsyncStream<MeshAnchor> {
+        AsyncStream { continuation in
+            Task {
+                for await anchor in ARUnderstanding(providers: [.meshes]).anchorUpdates {
+                    switch anchor {
+                    case .mesh(let meshAnchor):
+                        continuation.yield(meshAnchor)
+                    default:
+                        break
+                    }
+                }
+                continuation.finish()
+            }
+        }
+    }
+
+    public static var worldUpdates: AsyncStream<WorldAnchor> {
+        AsyncStream { continuation in
+            Task {
+                for await anchor in ARUnderstanding(providers: [.world]).anchorUpdates {
+                    switch anchor {
+                    case .world(let worldAnchor):
+                        continuation.yield(worldAnchor)
+                    default:
+                        break
+                    }
+                }
+                continuation.finish()
+            }
+        }
+    }
+
+    public static func imageUpdates(resourceGroupName groupName: String) -> AsyncStream<ImageAnchor> {
+        AsyncStream { continuation in
+            Task {
+                for await anchor in ARUnderstanding(providers: [.image(resourceGroupName: groupName)]).anchorUpdates {
+                    switch anchor {
+                    case .image(let imageAnchor):
+                        continuation.yield(imageAnchor)
+                    default:
+                        break
+                    }
+                }
+                continuation.finish()
+            }
+        }
+    }
+
     fileprivate func build(_ continuation: AsyncStream<CapturedAnchor>.Continuation) async {
         guard !providers.isEmpty,
               dataProvidersAreSupported,
