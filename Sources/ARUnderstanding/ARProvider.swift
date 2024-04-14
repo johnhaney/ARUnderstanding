@@ -13,11 +13,12 @@ public enum ARProvider {
     case meshes(SceneReconstructionProvider)
     case planes(PlaneDetectionProvider)
     case image(ImageTrackingProvider)
-    case world(WorldTrackingProvider)
+    case world(WorldTrackingProvider, QueryDeviceAnchor)
 }
 
-public enum ARPoviderDefinition {
+public enum ARProviderDefinition {
     case hands
+    case device
     case meshes
     case unclassifiedMeshes
     case planes
@@ -27,11 +28,18 @@ public enum ARPoviderDefinition {
     case world
 }
 
-extension ARPoviderDefinition {
+public enum QueryDeviceAnchor {
+    case enabled
+    case none
+}
+
+extension ARProviderDefinition {
     var provider: ARProvider {
         switch self {
         case .hands:
             .hands(HandTrackingProvider())
+        case .device:
+            .world(WorldTrackingProvider(), .enabled)
         case .meshes:
             .meshes(SceneReconstructionProvider(modes: [.classification]))
         case .unclassifiedMeshes:
@@ -45,7 +53,7 @@ extension ARPoviderDefinition {
         case .image(let resourceGroupName):
             .image(ImageTrackingProvider(referenceImages: ReferenceImage.loadReferenceImages(inGroupNamed: resourceGroupName)))
         case .world:
-            .world(WorldTrackingProvider())
+            .world(WorldTrackingProvider(), .none)
         }
     }
 }
