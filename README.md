@@ -24,7 +24,7 @@ struct ImmersiveView: View {
 }
 ```
 
-ARUnderstanding includes debug visualizations you can add to your scene based on the returned anchors See the ARVisualizer example in [https://github.com/johnhaney/ARKitVision]:
+ARUnderstanding includes **debug visualizations** you can add to your scene based on the returned anchors See the ARVisualizer example in [https://github.com/johnhaney/ARKitVision]:
 ```
 switch anchor.event {
 case .added:
