@@ -19,7 +19,7 @@ public protocol HandAnchorRepresentable: CapturableAnchor {
 extension HandAnchor: HandAnchorRepresentable {}
 
 public struct CapturedHandAnchor: CapturableAnchor, HandAnchorRepresentable, Sendable {
-    public func joint(named jointName: HandSkeleton.JointName) -> CapturedHandSkeleton.Joint {
+    public func joint(named jointName: ARKit.HandSkeleton.JointName) -> CapturedHandSkeleton.Joint {
         handSkeleton?.allJoints.first(where: { $0.name == jointName }) ?? CapturedHandSkeleton.Joint(name: jointName, anchorFromJointTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1)), isTracked: false, parentFromJointTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1)), parentJointName: nil)
     }
     
