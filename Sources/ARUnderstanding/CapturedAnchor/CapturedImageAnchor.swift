@@ -17,6 +17,16 @@ public protocol ImageAnchorRepresentable: CapturableAnchor {
     var estimatedPhysicalHeight: Float { get }
 }
 
+extension ImageAnchorRepresentable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
 extension ImageAnchor: ImageAnchorRepresentable {
     public var referenceImageName: String? { referenceImage.name }
     public var estimatedPhysicalWidth: Float { estimatedScaleFactor * Float(referenceImage.physicalSize.width) }

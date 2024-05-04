@@ -7,13 +7,23 @@
 
 import ARKit
 
-public protocol HandAnchorRepresentable: CapturableAnchor {
+public protocol HandAnchorRepresentable: CapturableAnchor, Hashable {
     associatedtype HandSkeleton: HandSkeletonRepresentable
     var id: UUID { get }
     var chirality: HandAnchor.Chirality { get }
     var handSkeleton: HandSkeleton? { get }
     var isTracked: Bool { get }
     var originFromAnchorTransform: simd_float4x4 { get }
+}
+
+extension HandAnchorRepresentable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id
+    }
 }
 
 extension HandAnchor: HandAnchorRepresentable {}
@@ -83,10 +93,20 @@ extension HandAnchorRepresentable {
     }
 }
 
-public protocol HandSkeletonRepresentable {
+public protocol HandSkeletonRepresentable: Hashable {
     associatedtype Joint: HandSkeletonJointRepresentable
     var allJoints: [Joint] { get }
     func joint(_ named: ARKit.HandSkeleton.JointName) -> Joint
+}
+
+extension HandSkeletonRepresentable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(allJoints)
+    }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.allJoints == rhs.allJoints
+    }
 }
 
 extension HandSkeleton: HandSkeletonRepresentable {}
@@ -97,12 +117,28 @@ extension HandSkeletonRepresentable {
     }
 }
 
-public protocol HandSkeletonJointRepresentable {
+public protocol HandSkeletonJointRepresentable: Hashable {
     var name: HandSkeleton.JointName { get }
     var isTracked: Bool { get }
     var anchorFromJointTransform: simd_float4x4 { get }
     var parentFromJointTransform: simd_float4x4 { get }
     var parentJoint: Self? { get }
+}
+
+extension HandSkeletonJointRepresentable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(name)
+        hasher.combine(isTracked)
+        hasher.combine(anchorFromJointTransform)
+        hasher.combine(parentFromJointTransform)
+    }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.name == rhs.name &&
+        lhs.isTracked == rhs.isTracked &&
+        lhs.anchorFromJointTransform == rhs.anchorFromJointTransform &&
+        lhs.parentFromJointTransform == rhs.parentFromJointTransform
+    }
 }
 
 extension HandSkeleton.Joint: HandSkeletonJointRepresentable {}

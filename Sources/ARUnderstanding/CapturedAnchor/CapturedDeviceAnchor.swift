@@ -7,15 +7,27 @@
 
 import ARKit
 
-public protocol DeviceAnchorRepresentable: CapturableAnchor {
+public protocol DeviceAnchorRepresentable: CapturableAnchor, Hashable {
     var originFromAnchorTransform: simd_float4x4 { get }
     var isTracked: Bool { get }
     var id: UUID { get }
 }
 
+extension DeviceAnchorRepresentable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+        hasher.combine(isTracked)
+        hasher.combine(originFromAnchorTransform)
+    }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id && lhs.isTracked == rhs.isTracked && lhs.originFromAnchorTransform == rhs.originFromAnchorTransform
+    }
+}
+
 extension DeviceAnchor: DeviceAnchorRepresentable {}
 
-public struct CapturedDeviceAnchor: TrackableAnchor, Sendable {
+public struct CapturedDeviceAnchor: DeviceAnchorRepresentable, TrackableAnchor, Sendable {
     public var id: UUID
     public var originFromAnchorTransform: simd_float4x4
     public var isTracked: Bool
@@ -31,5 +43,14 @@ public struct CapturedDeviceAnchor: TrackableAnchor, Sendable {
 extension DeviceAnchorRepresentable {
     public var captured: CapturedDeviceAnchor {
         CapturedDeviceAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, isTracked: isTracked)
+    }
+}
+
+extension simd_float4x4: Hashable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(columns.0)
+        hasher.combine(columns.1)
+        hasher.combine(columns.2)
+        hasher.combine(columns.3)
     }
 }

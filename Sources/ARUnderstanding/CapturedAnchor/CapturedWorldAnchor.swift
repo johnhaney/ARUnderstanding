@@ -13,6 +13,16 @@ public protocol WorldAnchorRepresentable: CapturableAnchor {
     var id: UUID { get }
 }
 
+extension WorldAnchorRepresentable {
+    public func hash(into hasher: inout Hasher) {
+        hasher.combine(id)
+    }
+    
+    public static func == (lhs: Self, rhs: Self) -> Bool {
+        lhs.id == rhs.id
+    }
+}
+
 extension WorldAnchor: WorldAnchorRepresentable {}
 
 public struct CapturedWorldAnchor: TrackableAnchor, WorldAnchorRepresentable, Sendable {

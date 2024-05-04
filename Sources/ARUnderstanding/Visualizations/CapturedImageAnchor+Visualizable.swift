@@ -9,7 +9,7 @@ import ARKit
 import RealityKit
 
 extension CapturedImageAnchor: Visualizable {
-    func visualize(with materials: [Material]) -> Entity {
+    public func visualize(with materials: [Material]) -> Entity {
         let entity = Entity()
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         
@@ -28,7 +28,7 @@ extension CapturedImageAnchor: Visualizable {
         return model
     }
 
-    func update(visualization entity: Entity, with materials: () -> [Material]) {
+    public func update(visualization entity: Entity, with materials: () -> [Material]) {
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         guard let model = entity.findEntity(named: "Image") ?? entity.children.first
         else { return }

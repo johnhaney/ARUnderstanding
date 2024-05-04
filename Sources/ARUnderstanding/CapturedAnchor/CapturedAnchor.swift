@@ -7,12 +7,12 @@
 
 import ARKit
 
-public protocol CapturableAnchor: Anchor {
-    associatedtype CapturedType: Anchor
+public protocol CapturableAnchor: Anchor, Hashable {
+    associatedtype CapturedType: Anchor & Hashable
     var captured: CapturedType { get }
 }
 
-public enum CapturedAnchor: Sendable {
+public enum CapturedAnchor: Sendable, Hashable {
     case hand(CapturedAnchorUpdate<CapturedHandAnchor>)
     case mesh(CapturedAnchorUpdate<CapturedMeshAnchor>)
     case plane(CapturedAnchorUpdate<CapturedPlaneAnchor>)
@@ -21,7 +21,7 @@ public enum CapturedAnchor: Sendable {
     case device(CapturedAnchorUpdate<CapturedDeviceAnchor>)
 }
 
-public struct CapturedAnchorUpdate<AnchorType>: Sendable where AnchorType: Anchor {
+public struct CapturedAnchorUpdate<AnchorType: Hashable>: Sendable, Hashable where AnchorType: Anchor {
     public let anchor: AnchorType
     public let timestamp: TimeInterval
     public let event: CapturedAnchorEvent
@@ -33,7 +33,7 @@ public struct CapturedAnchorUpdate<AnchorType>: Sendable where AnchorType: Ancho
     }
 }
 
-public enum CapturedAnchorEvent: String, Codable, Sendable {
+public enum CapturedAnchorEvent: String, Codable, Sendable, Hashable {
     case added
     case updated
     case removed

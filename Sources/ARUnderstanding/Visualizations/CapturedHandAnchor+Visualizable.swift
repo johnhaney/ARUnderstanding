@@ -9,7 +9,7 @@ import ARKit
 import RealityKit
 
 extension CapturedHandAnchor: Visualizable {
-    func visualize(with materials: [Material]) -> Entity {
+    public func visualize(with materials: [Material]) -> Entity {
         let entity = Entity()
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         guard let handSkeleton else { return entity }
@@ -40,7 +40,7 @@ extension CapturedHandAnchor: Visualizable {
         return ball
     }
     
-    func update(visualization entity: Entity, with materials: @autoclosure () -> [Material]) {
+    public func update(visualization entity: Entity, with materials: @autoclosure () -> [Material]) {
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         
         let existingJoints = Set(entity.children.map(\.name))
