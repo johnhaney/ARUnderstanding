@@ -16,7 +16,7 @@ public enum ARProvider {
     case world(WorldTrackingProvider, QueryDeviceAnchor)
 }
 
-public enum ARProviderDefinition {
+public enum ARProviderDefinition: Equatable {
     case hands
     case device
     case meshes
