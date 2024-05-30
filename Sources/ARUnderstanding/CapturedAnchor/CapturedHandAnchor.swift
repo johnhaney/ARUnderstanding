@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/13/24.
 //
 
+#if os(visionOS)
 import ARKit
 
 public protocol HandAnchorRepresentable: CapturableAnchor, Hashable {
@@ -161,3 +162,4 @@ extension HandAnchor {
     }
 }
 
+#endif

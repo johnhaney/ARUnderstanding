@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/13/24.
 //
 
+#if os(visionOS)
 import ARKit
 
 public protocol WorldAnchorRepresentable: CapturableAnchor {
@@ -43,3 +44,4 @@ extension WorldAnchorRepresentable {
         CapturedWorldAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, isTracked: isTracked)
     }
 }
+#endif

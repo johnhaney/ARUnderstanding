@@ -5,7 +5,9 @@
 //  Created by John Haney on 4/7/24.
 //
 
+#if os(visionOS)
 import ARKit
+import RealityKit
 
 public protocol CapturableAnchor: Anchor, Hashable {
     associatedtype CapturedType: Anchor & Hashable
@@ -126,3 +128,4 @@ extension AnchorUpdate.Event where AnchorType: CapturableAnchor {
         }
     }
 }
+#endif

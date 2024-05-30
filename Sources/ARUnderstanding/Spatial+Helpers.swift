@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/20/24.
 //
 
+#if os(visionOS)
 import Spatial
 import RealityKit
 
@@ -87,3 +88,4 @@ extension Vector3D {
         SIMD3<Float>(self)
     }
 }
+#endif

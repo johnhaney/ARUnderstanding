@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/14/24.
 //
 
+#if os(visionOS)
 import ARKit
 import RealityKit
 
@@ -27,3 +28,4 @@ extension CapturedWorldAnchor: Visualizable {
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#if os(visionOS)
 import XCTest
 @testable import ARUnderstanding
 import ARKit
@@ -63,3 +64,4 @@ final class ARUnderstandingTests: XCTestCase {
         await fulfillment(of: [exitedAnchorLoop, gotAnchor], timeout: 1)
     }
 }
+#endif

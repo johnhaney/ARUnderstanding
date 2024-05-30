@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/13/24.
 //
 
+#if os(visionOS)
 import ARKit
 
 public protocol ImageAnchorRepresentable: CapturableAnchor {
@@ -59,3 +60,4 @@ extension ImageAnchorRepresentable {
         CapturedImageAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, isTracked: isTracked, referenceImageName: referenceImageName, estimatedScaleFactor: estimatedScaleFactor, estimatedPhysicalWidth: estimatedPhysicalWidth, estimatedPhysicalHeight: estimatedPhysicalHeight)
     }
 }
+#endif

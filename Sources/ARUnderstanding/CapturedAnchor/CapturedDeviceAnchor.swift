@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/14/24.
 //
 
+#if os(visionOS)
 import ARKit
 
 public protocol DeviceAnchorRepresentable: CapturableAnchor, Hashable {
@@ -24,8 +25,6 @@ extension DeviceAnchorRepresentable {
         lhs.id == rhs.id && lhs.isTracked == rhs.isTracked && lhs.originFromAnchorTransform == rhs.originFromAnchorTransform
     }
 }
-
-extension DeviceAnchor: DeviceAnchorRepresentable {}
 
 public struct CapturedDeviceAnchor: DeviceAnchorRepresentable, TrackableAnchor, Sendable {
     public var id: UUID
@@ -54,3 +53,4 @@ extension simd_float4x4: Hashable {
         hasher.combine(columns.3)
     }
 }
+#endif

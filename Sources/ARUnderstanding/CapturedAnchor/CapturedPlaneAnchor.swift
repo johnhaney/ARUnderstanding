@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/13/24.
 //
 
+#if os(visionOS)
 import ARKit
 import RealityKit
 
@@ -187,3 +188,4 @@ extension PlaneAnchorGeometryExtentRepresentable {
         CapturedPlaneAnchor.Geometry.Extent(anchorFromExtentTransform: anchorFromExtentTransform, width: width, height: height)
     }
 }
+#endif

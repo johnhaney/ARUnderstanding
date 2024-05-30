@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/14/24.
 //
 
+#if os(visionOS)
 import ARKit
 import RealityKit
 
@@ -54,3 +55,4 @@ extension MeshAnchorRepresentable {
         await geometry.mesh.mesh(name: name)
     }
 }
+#endif

@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/13/24.
 //
 
+#if os(visionOS)
 import ARKit
 import RealityKit
 
@@ -187,3 +188,4 @@ extension MeshAnchor.Geometry {
         return normal
     }
 }
+#endif

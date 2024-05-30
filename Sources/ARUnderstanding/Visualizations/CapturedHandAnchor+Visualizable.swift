@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/14/24.
 //
 
+#if os(visionOS)
 import ARKit
 import RealityKit
 
@@ -144,3 +145,4 @@ extension HandSkeleton.JointName {
         case decodingError
     }
 }
+#endif

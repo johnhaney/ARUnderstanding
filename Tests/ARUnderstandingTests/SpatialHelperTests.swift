@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/20/24.
 //
 
+#if os(visionOS)
 import XCTest
 @testable import ARUnderstanding
 import Spatial
@@ -42,3 +43,4 @@ final class SpatialHelperTests: XCTestCase {
         XCTAssertEqual(rotation.right.z, -0.3106, accuracy: 0.001)
     }
 }
+#endif

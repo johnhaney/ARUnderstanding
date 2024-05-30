@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/14/24.
 //
 
+#if os(visionOS)
 import ARKit
 import RealityKit
 
@@ -35,3 +36,4 @@ extension CapturedImageAnchor: Visualizable {
         model.transform.scale = SIMD3<Float>(x: estimatedPhysicalWidth, y: estimatedPhysicalHeight, z: 1)
     }
 }
+#endif

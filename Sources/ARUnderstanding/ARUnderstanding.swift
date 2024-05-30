@@ -5,6 +5,7 @@
 //  Created by John Haney on 3/31/24.
 //
 
+#if os(visionOS)
 import ARKit
 import RealityKit
 import OSLog
@@ -366,3 +367,4 @@ extension ARProvider {
         }
     }
 }
+#endif

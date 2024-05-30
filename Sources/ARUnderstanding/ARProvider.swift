@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/7/24.
 //
 
+#if os(visionOS)
 import ARKit
 
 @MainActor
@@ -57,3 +58,4 @@ extension ARProviderDefinition {
         }
     }
 }
+#endif
