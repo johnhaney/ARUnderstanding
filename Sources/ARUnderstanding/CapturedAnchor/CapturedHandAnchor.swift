@@ -27,10 +27,14 @@ extension HandAnchorRepresentable {
     }
 }
 
-extension HandAnchor: HandAnchorRepresentable {}
+#if os(visionOS)
+public typealias JointName = ARKit.HandSkeleton.JointName
+#else
+public typealias JointName = HandSkeleton.JointName
+#endif
 
 public struct CapturedHandAnchor: CapturableAnchor, HandAnchorRepresentable, Sendable {
-    public func joint(named jointName: ARKit.HandSkeleton.JointName) -> CapturedHandSkeleton.Joint {
+    public func joint(named jointName: JointName) -> CapturedHandSkeleton.Joint {
         handSkeleton?.allJoints.first(where: { $0.name == jointName }) ?? CapturedHandSkeleton.Joint(name: jointName, anchorFromJointTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1)), isTracked: false, parentFromJointTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1)), parentJointName: nil)
     }
     
@@ -63,7 +67,8 @@ public struct CapturedHandSkeleton: HandSkeletonRepresentable, Sendable {
     
     public var allJoints: [Joint]
     public init(allJoints: [Joint]) {
-        self.allJoints = allJoints
+        let jointByName = Dictionary(grouping: allJoints, by: \.name)
+        self.allJoints = allJoints.map({ $0.with(parentFrom: jointByName) })
     }
     
     public struct Joint: HandSkeletonJointRepresentable, Sendable {
@@ -72,7 +77,8 @@ public struct CapturedHandSkeleton: HandSkeletonRepresentable, Sendable {
         public let isTracked: Bool
         public let parentFromJointTransform: simd_float4x4
         public let parentJointName: String?
-        public var parentJoint: Joint? { nil }
+        public var parentJoint: Joint? { parentJointSource?.first }
+        var parentJointSource: [Joint]? = nil
         
         public init(name: HandSkeleton.JointName, anchorFromJointTransform: simd_float4x4, isTracked: Bool, parentFromJointTransform: simd_float4x4, parentJointName: String?) {
             self.name = name
@@ -80,6 +86,29 @@ public struct CapturedHandSkeleton: HandSkeletonRepresentable, Sendable {
             self.isTracked = isTracked
             self.parentFromJointTransform = parentFromJointTransform
             self.parentJointName = parentJointName
+        }
+        
+        init(name: HandSkeleton.JointName, anchorFromJointTransform: simd_float4x4, isTracked: Bool, parentFromJointTransform: simd_float4x4, parentJointName: String?, parentJointSource: [Joint]? = nil) {
+            self.name = name
+            self.anchorFromJointTransform = anchorFromJointTransform
+            self.isTracked = isTracked
+            self.parentFromJointTransform = parentFromJointTransform
+            self.parentJointName = parentJointName
+            self.parentJointSource = parentJointSource
+        }
+        
+        func with(parentFrom from: [HandSkeleton.JointName: [Joint]]) -> Self {
+            guard let parentJointName,
+                  let jointName = try? HandSkeleton.JointName(rawValue: parentJointName),
+                  let joint = from[jointName]?.first
+            else { return self }
+            
+            return Joint(name: name,
+                         anchorFromJointTransform: anchorFromJointTransform,
+                         isTracked: isTracked,
+                         parentFromJointTransform: parentFromJointTransform,
+                         parentJointName: parentJointName,
+                         parentJointSource: [joint])
         }
     }
     
@@ -97,7 +126,11 @@ extension HandAnchorRepresentable {
 public protocol HandSkeletonRepresentable: Hashable {
     associatedtype Joint: HandSkeletonJointRepresentable
     var allJoints: [Joint] { get }
+    #if os(visionOS)
     func joint(_ named: ARKit.HandSkeleton.JointName) -> Joint
+    #else
+    func joint(_ named: HandSkeleton.JointName) -> Joint
+    #endif
 }
 
 extension HandSkeletonRepresentable {
@@ -109,8 +142,6 @@ extension HandSkeletonRepresentable {
         lhs.allJoints == rhs.allJoints
     }
 }
-
-extension HandSkeleton: HandSkeletonRepresentable {}
 
 extension HandSkeletonRepresentable {
     public var captured: CapturedHandSkeleton {
@@ -142,8 +173,6 @@ extension HandSkeletonJointRepresentable {
     }
 }
 
-extension HandSkeleton.Joint: HandSkeletonJointRepresentable {}
-
 extension HandSkeletonJointRepresentable {
     var captured: CapturedHandSkeleton.Joint {
         CapturedHandSkeleton.Joint(
@@ -155,11 +184,4 @@ extension HandSkeletonJointRepresentable {
         )
     }
 }
-
-extension HandAnchor {
-    public static var neutralPose: CapturedAnchor {
-        .hand(CapturedHandAnchor(id: UUID(), chirality: .left, handSkeleton: .neutralPose, isTracked: false, originFromAnchorTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1))).updated(timestamp: 0))
-    }
-}
-
 #endif

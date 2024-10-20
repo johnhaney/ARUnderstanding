@@ -14,6 +14,7 @@ public protocol MeshAnchorRepresentable: CapturableAnchor {
     var geometry: Geometry { get }
     var originFromAnchorTransform: simd_float4x4 { get }
     var id: UUID { get }
+    func shape() async throws -> ShapeResource
 }
 
 extension MeshAnchorRepresentable {
@@ -25,8 +26,6 @@ extension MeshAnchorRepresentable {
         lhs.id == rhs.id
     }
 }
-
-extension MeshAnchor: MeshAnchorRepresentable {}
 
 public struct CapturedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
     public var id: UUID
@@ -48,16 +47,19 @@ public struct CapturedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
         
         public var captured: CapturedMeshAnchor.Geometry { self }
 
-        enum CapturedMeshGeometrySource {
+        enum CapturedMeshGeometrySource : Sendable {
             case captured(CapturedMeshGeometry)
+#if os(visionOS)
             case mesh(MeshAnchor.Geometry)
-            
+#endif
             var mesh: CapturedMeshGeometry {
                 switch self {
                 case .captured(let capturedPlaneMeshGeometry):
                     capturedPlaneMeshGeometry
+#if os(visionOS)
                 case .mesh(let geometry):
                     CapturedMeshGeometry(geometry)
+#endif
                 }
             }
         }
@@ -66,40 +68,56 @@ public struct CapturedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
             self.meshSource = .captured(mesh)
         }
 
+#if os(visionOS)
         public init(mesh: MeshAnchor.Geometry) {
             self.meshSource = .mesh(mesh)
         }
+#endif
+    }
+    
+    public func shape() async throws -> ShapeResource {
+        try await geometry.mesh.shape()
     }
 }
 
-public struct CapturedMeshGeometry: Codable {
-    var vertices: [SIMD3<Float>]
-    var normals: [SIMD3<Float>]
-    var triangles: [[UInt32]]
-    var classifications: [Int?]
+extension ShapeResource {
+    static func generateStaticMesh(from: any MeshAnchorRepresentable) async throws -> ShapeResource {
+        return try await from.shape()
+    }
+}
+
+public struct CapturedMeshGeometry: Codable, Sendable {
+    let vertices: [SIMD3<Float>]
+    let normals: [SIMD3<Float>]
+    let triangles: [[UInt32]]
+    let classifications: [Int?]
     
+    #if os(visionOS)
     init(_ geometry: MeshAnchor.Geometry) {
-        vertices = []
-        triangles = []
-        normals = []
-        classifications = []
-        
-        for index in 0 ..< geometry.vertices.count {
-            let vertex = geometry.vertex(at: UInt32(index))
-            let vertexPos = SIMD3<Float>(x: vertex.0, y: vertex.1, z: vertex.2)
-            vertices.append(vertexPos)
+        vertices = (0..<UInt32(geometry.vertices.count)).map { index in
+            let vertex = geometry.vertex(at: index)
+            return SIMD3<Float>(x: vertex.0, y: vertex.1, z: vertex.2)
         }
         
-        for index in 0 ..< geometry.faces.count {
-            let face = geometry.vertexIndicesOf(faceWithIndex: Int(index))
-            triangles.append([face[0],face[1],face[2]])
+        triangles = (0 ..< geometry.faces.count).map { index in
+            let face = geometry.vertexIndicesOf(faceWithIndex: index)
+            return [face[0],face[1],face[2]]
         }
         
-        for index in 0 ..< geometry.normals.count {
-            let normal = geometry.normalsOf(at: UInt32(index))
-            normals.append(SIMD3<Float>(normal.0, normal.1, normal.2))
+        normals = (0 ..< UInt32(geometry.normals.count)).map { index in
+            let normal = geometry.normalsOf(at: index)
+            return SIMD3<Float>(normal.0, normal.1, normal.2)
+        }
+        
+        if let geometryClassifications = geometry.classifications {
+            classifications = (0 ..< geometryClassifications.count).map { index in
+                geometry.classification(at: index)
+            }
+        } else {
+            classifications = []
         }
     }
+    #endif
     
     func mesh(name: String) async -> MeshResource? {
         var mesh = MeshDescriptor(name: name)
@@ -122,6 +140,13 @@ public struct CapturedMeshGeometry: Codable {
             return nil
         }
     }
+    
+    func shape() async throws -> ShapeResource {
+        try await ShapeResource.generateStaticMesh(
+            positions: vertices,
+            faceIndices: triangles.flatMap({ $0 }).map(UInt16.init)
+        )
+    }
 }
 
 extension MeshAnchorRepresentable {
@@ -134,9 +159,6 @@ public protocol MeshAnchorGeometryRepresentable {
     var mesh: CapturedMeshGeometry { get }
 }
 
-extension MeshAnchor.Geometry: MeshAnchorGeometryRepresentable {
-    public var mesh: CapturedMeshGeometry { CapturedMeshGeometry(self) }
-}
 
 extension MeshAnchorGeometryRepresentable {
     var captured: CapturedMeshAnchor.Geometry {
@@ -146,6 +168,14 @@ extension MeshAnchorGeometryRepresentable {
 
 
 extension MeshAnchor.Geometry {
+    func classification(at index: Int) -> Int? {
+        guard let classifications else { return nil }
+        assert(classifications.format == MTLVertexFormat.int, "Expected unsigned int per classification.")
+        let classificationPointer = classifications.buffer.contents().advanced(by: classifications.offset + (classifications.stride * index))
+        let classification = classificationPointer.assumingMemoryBound(to: Int.self).pointee
+        return classification
+    }
+    
     func vertex(at index: UInt32) -> (Float, Float, Float) {
         assert(vertices.format == MTLVertexFormat.float3, "Expected three floats (twelve bytes) per vertex.")
         let vertexPointer = vertices.buffer.contents().advanced(by: vertices.offset + (vertices.stride * Int(index)))

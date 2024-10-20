@@ -28,12 +28,6 @@ extension ImageAnchorRepresentable {
     }
 }
 
-extension ImageAnchor: ImageAnchorRepresentable {
-    public var referenceImageName: String? { referenceImage.name }
-    public var estimatedPhysicalWidth: Float { estimatedScaleFactor * Float(referenceImage.physicalSize.width) }
-    public var estimatedPhysicalHeight: Float { estimatedScaleFactor * Float(referenceImage.physicalSize.height) }
-}
-
 public struct CapturedImageAnchor: TrackableAnchor, ImageAnchorRepresentable, Sendable {
     public var id: UUID
     public var originFromAnchorTransform: simd_float4x4

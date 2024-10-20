@@ -28,8 +28,6 @@ extension PlaneAnchorRepresentable {
     }
 }
 
-extension PlaneAnchor: PlaneAnchorRepresentable {}
-
 public struct CapturedPlaneAnchor: Anchor, PlaneAnchorRepresentable, Sendable {
     public var id: UUID
     public var originFromAnchorTransform: simd_float4x4
@@ -48,35 +46,12 @@ public struct CapturedPlaneAnchor: Anchor, PlaneAnchorRepresentable, Sendable {
     
     public struct Geometry: PlaneAnchorGeometryRepresentable, Sendable {
         public var extent: Extent
-        public var mesh: CapturedPlaneMeshGeometry {
-            meshSource.mesh
-        }
-        private var meshSource: CapturedPlaneMeshGeometrySource
-        
-        public var captured: CapturedPlaneAnchor.Geometry { self }
-
-        enum CapturedPlaneMeshGeometrySource {
-            case captured(CapturedPlaneMeshGeometry)
-            case mesh(PlaneAnchor.Geometry)
-            
-            var mesh: CapturedPlaneMeshGeometry {
-                switch self {
-                case .captured(let capturedPlaneMeshGeometry):
-                    capturedPlaneMeshGeometry
-                case .mesh(let geometry):
-                    CapturedPlaneMeshGeometry(geometry)
-                }
-            }
-        }
+        public var mesh: CapturedPlaneMeshGeometry
+        public var captured: Self { self }
 
         public init(extent: Extent, mesh: CapturedPlaneMeshGeometry) {
             self.extent = extent
-            self.meshSource = .captured(mesh)
-        }
-        
-        public init(extent: Extent, mesh: PlaneAnchor.Geometry) {
-            self.extent = extent
-            self.meshSource = .mesh(mesh)
+            self.mesh = mesh
         }
         
         public struct Extent: PlaneAnchorGeometryExtentRepresentable, Sendable {
@@ -106,7 +81,7 @@ public protocol PlaneAnchorGeometryRepresentable {
     var captured: CapturedPlaneAnchor.Geometry { get }
 }
 
-public struct CapturedPlaneMeshGeometry: Codable {
+public struct CapturedPlaneMeshGeometry: Codable, Sendable {
     var vertices: [SIMD3<Float>]
     var triangles: [[UInt32]]
     
@@ -168,20 +143,11 @@ extension PlaneAnchor.Geometry {
     }
 }
 
-extension PlaneAnchor.Geometry: PlaneAnchorGeometryRepresentable {
-    public var mesh: CapturedPlaneMeshGeometry { CapturedPlaneMeshGeometry(self) }
-    public var captured: CapturedPlaneAnchor.Geometry {
-        CapturedPlaneAnchor.Geometry(extent: extent.captured, mesh: self)
-    }
-}
-
 public protocol PlaneAnchorGeometryExtentRepresentable {
     var anchorFromExtentTransform: simd_float4x4 { get }
     var width: Float { get }
     var height: Float { get }
 }
-
-extension PlaneAnchor.Geometry.Extent: PlaneAnchorGeometryExtentRepresentable {}
 
 extension PlaneAnchorGeometryExtentRepresentable {
     var captured: CapturedPlaneAnchor.Geometry.Extent {

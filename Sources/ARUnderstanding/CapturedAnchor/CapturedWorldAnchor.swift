@@ -24,6 +24,7 @@ extension WorldAnchorRepresentable {
     }
 }
 
+extension WorldAnchor: @retroactive Hashable {}
 extension WorldAnchor: WorldAnchorRepresentable {}
 
 public struct CapturedWorldAnchor: TrackableAnchor, WorldAnchorRepresentable, Sendable {
