@@ -10,26 +10,26 @@ import ARKit
 import RealityKit
 
 extension CapturedPlaneAnchor: Visualizable {
-    public func visualize(with materials: [Material]) -> Entity {
+    @MainActor public func visualize(with materials: [Material]) -> Entity {
         let entity = Entity()
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         Task {
             if let model = await visualizationModel(materials: materials) {
-                await entity.addChild(model)
+                entity.addChild(model)
             }
         }
 
         return entity
     }
     
-    private func visualizationModel(materials: [Material]) async -> Entity? {
+    @MainActor private func visualizationModel(materials: [Material]) async -> Entity? {
         guard let mesh: MeshResource = await mesh(name: "Visualization")
         else { return nil }
-        let model = await ModelEntity(mesh: mesh, materials: materials)
+        let model = ModelEntity(mesh: mesh, materials: materials)
         return model
     }
     
-    public func update(visualization entity: Entity, with materials: () -> [Material]) {
+    @MainActor public func update(visualization entity: Entity, with materials: () -> [Material]) {
         let transform = Transform(matrix: self.originFromAnchorTransform)
         entity.transform = transform
         // Remove the previous mesh and we will start over each time
@@ -39,7 +39,7 @@ extension CapturedPlaneAnchor: Visualizable {
         let materials = materials()
         Task {
             if let model = await visualizationModel(materials: materials) {
-                await update(visualization: entity, with: model, transform: transform)
+                update(visualization: entity, with: model, transform: transform)
             }
         }
     }

@@ -10,7 +10,7 @@ import ARKit
 import RealityKit
 
 extension CapturedHandAnchor: Visualizable {
-    public func visualize(with materials: [Material]) -> Entity {
+    @MainActor public func visualize(with materials: [Material]) -> Entity {
         let entity = Entity()
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         guard let handSkeleton else { return entity }
@@ -27,13 +27,13 @@ extension CapturedHandAnchor: Visualizable {
         return entity
     }
     
-    private func visualizationModel(materials: [Material]) -> Entity {
+    @MainActor private func visualizationModel(materials: [Material]) -> Entity {
         let mesh = MeshResource.generateSphere(radius: 0.005)
         let model = ModelEntity(mesh: mesh, materials: materials)
         return model
     }
     
-    private func createJointVisualization<Joint: HandSkeletonJointRepresentable>(joint: Joint, materials: [Material]) -> Entity {
+    @MainActor private func createJointVisualization<Joint: HandSkeletonJointRepresentable>(joint: Joint, materials: [Material]) -> Entity {
         let ball = visualizationModel(materials: materials)
         
         ball.name = joint.name.description
@@ -41,7 +41,7 @@ extension CapturedHandAnchor: Visualizable {
         return ball
     }
     
-    public func update(visualization entity: Entity, with materials: @autoclosure () -> [Material]) {
+    @MainActor public func update(visualization entity: Entity, with materials: @autoclosure () -> [Material]) {
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         
         let existingJoints = Set(entity.children.map(\.name))
@@ -59,7 +59,7 @@ extension CapturedHandAnchor: Visualizable {
         }
         
         for jointName in update {
-            guard let joint = try? ARKit.HandSkeleton.JointName(rawValue: jointName) else { continue }
+            guard let joint = try? JointName(rawValue: jointName) else { continue }
             
             entity.findEntity(named: jointName)?.transform = Transform(matrix: handSkeleton.joint(joint).anchorFromJointTransform)
         }
@@ -68,7 +68,7 @@ extension CapturedHandAnchor: Visualizable {
         let materials = materials()
         
         for jointName in add {
-            guard let name = try? ARKit.HandSkeleton.JointName(rawValue: jointName) else { continue }
+            guard let name = try? JointName(rawValue: jointName) else { continue }
             let joint = handSkeleton.joint(name)
             
             let ball = createJointVisualization(joint: joint, materials: materials)

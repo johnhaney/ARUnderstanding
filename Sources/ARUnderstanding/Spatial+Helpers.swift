@@ -42,7 +42,7 @@ extension Rotation3D {
 }
 
 extension Pose3D {
-    init?(_ entity: Entity) {
+    @MainActor init?(_ entity: Entity) {
         self.init(entity.transform)
     }
     
@@ -56,7 +56,7 @@ extension Pose3D {
 }
 
 extension Point3D {
-    init(_ entity: Entity) {
+    @MainActor init(_ entity: Entity) {
         self.init(entity.transform)
     }
     
@@ -70,7 +70,7 @@ extension Point3D {
 }
 
 extension Rotation3D {
-    init(_ entity: Entity) {
+    @MainActor init(_ entity: Entity) {
         self.init(entity.transform)
     }
     

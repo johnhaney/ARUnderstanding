@@ -10,20 +10,20 @@ import ARKit
 import RealityKit
 
 protocol Visualizable {
-    func visualize(with materials: [Material]) -> Entity
-    func update(visualization entity: Entity, with materials: () -> [Material])
+    @MainActor func visualize(with materials: [Material]) -> Entity
+    @MainActor func update(visualization entity: Entity, with materials: () -> [Material])
 }
 
 extension CapturedAnchor: Visualizable {
-    public var visualization: Entity {
+    @MainActor public var visualization: Entity {
         visualize(with: [defaultMaterial])
     }
 
-    public func update(visualization: Entity) {
+    @MainActor public func update(visualization: Entity) {
         update(visualization: visualization, with: [defaultMaterial])
     }
 
-    public func visualize(with materials: [Material]) -> Entity {
+    @MainActor public func visualize(with materials: [Material]) -> Entity {
         switch self {
         case .hand(let capturedHandAnchor):
             capturedHandAnchor.visualize(with: materials)
@@ -62,7 +62,7 @@ extension CapturedAnchor: Visualizable {
         case .hand:
             return SimpleMaterial(color: .purple, isMetallic: false)
         case .mesh:
-            return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.1, saturation: 1, brightness: 1, alpha: 0.2), isMetallic: false)
+            return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.2, saturation: 1, brightness: 1, alpha: 0.2), isMetallic: false)
         case .plane:
             return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.66, saturation: 1, brightness: 1, alpha: 0.2), isMetallic: false)
         case .image:

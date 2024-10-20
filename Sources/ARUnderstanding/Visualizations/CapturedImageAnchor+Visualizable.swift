@@ -10,7 +10,7 @@ import ARKit
 import RealityKit
 
 extension CapturedImageAnchor: Visualizable {
-    public func visualize(with materials: [Material]) -> Entity {
+    @MainActor public func visualize(with materials: [Material]) -> Entity {
         let entity = Entity()
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         
@@ -22,7 +22,7 @@ extension CapturedImageAnchor: Visualizable {
         return entity
     }
     
-    private func visualizationModel(materials: [Material]) -> Entity {
+    @MainActor private func visualizationModel(materials: [Material]) -> Entity {
         let mesh = MeshResource.generatePlane(width: 1, height: 1)
         let model = ModelEntity(mesh: mesh, materials: materials)
         model.name = "Image"

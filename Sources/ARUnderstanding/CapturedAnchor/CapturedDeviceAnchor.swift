@@ -45,7 +45,7 @@ extension DeviceAnchorRepresentable {
     }
 }
 
-extension simd_float4x4: Hashable {
+extension simd_float4x4: @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {
         hasher.combine(columns.0)
         hasher.combine(columns.1)

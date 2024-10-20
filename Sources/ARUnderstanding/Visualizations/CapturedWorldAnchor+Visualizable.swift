@@ -18,7 +18,7 @@ extension CapturedWorldAnchor: Visualizable {
         return entity
     }
     
-    private func visualizationModel(materials: [Material]) -> Entity {
+    @MainActor private func visualizationModel(materials: [Material]) -> Entity {
         let mesh = MeshResource.generateSphere(radius: 0.005)
         let model = ModelEntity(mesh: mesh, materials: materials)
         return model

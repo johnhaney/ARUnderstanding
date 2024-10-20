@@ -10,16 +10,19 @@ import ARKit
 import RealityKit
 
 extension CapturedDeviceAnchor: Visualizable {
-    public func visualize(with materials: [Material]) -> Entity {
+    @MainActor public func visualize(with materials: [Material]) -> Entity {
         let entity = Entity()
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         let model = visualizationModel(materials: materials)
-        model.transform.translation = SIMD3<Float>(x: 0, y: 0, z: -0.5)
+        model.transform = Transform(translation: SIMD3<Float>(x: 0, y: 0, z: -0.5))
+        entity.addChild(model)
+        let model2 = model.clone(recursive: true)
+        model2.transform = Transform(scale: SIMD3<Float>(repeating: 30))
         entity.addChild(model)
         return entity
     }
     
-    private func visualizationModel(materials: [Material]) -> Entity {
+    @MainActor private func visualizationModel(materials: [Material]) -> Entity {
         let mesh = MeshResource.generateSphere(radius: 0.005)
         let model = ModelEntity(mesh: mesh, materials: materials)
         return model
