@@ -5,11 +5,11 @@
 //  Created by John Haney on 5/29/24.
 //
 
+#if os(visionOS)
 import Foundation
 import ARKit
 import RealityKit
 
-#if os(visionOS)
 extension MeshAnchor: @retroactive Hashable {}
 extension MeshAnchor: MeshAnchorRepresentable {
     public func shape() async throws -> ShapeResource {
@@ -32,7 +32,7 @@ extension HandSkeleton.Joint: HandSkeletonJointRepresentable {}
 
 extension HandAnchor {
     public static var neutralPose: CapturedAnchor {
-        .hand(CapturedHandAnchor(id: UUID(), chirality: .left, handSkeleton: .neutralPose, isTracked: false, originFromAnchorTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1))).updated(timestamp: 0))
+        .hand(CapturedHandAnchor(id: UUID(), chirality: .left, handSkeleton: .neutralPose, isTracked: false, originFromAnchorTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1)), timestamp: 0).updated(timestamp: 0))
     }
 }
 
@@ -50,6 +50,9 @@ extension DeviceAnchor: @retroactive Hashable {}
 extension DeviceAnchor: @retroactive Equatable {}
 extension DeviceAnchor: DeviceAnchorRepresentable {}
 
+extension WorldAnchor: @retroactive Hashable {}
+extension WorldAnchor: WorldAnchorRepresentable {}
+
 extension PlaneAnchor.Geometry: PlaneAnchorGeometryRepresentable {
     public var mesh: CapturedPlaneMeshGeometry { CapturedPlaneMeshGeometry(self) }
     public var captured: CapturedPlaneAnchor.Geometry {
@@ -58,4 +61,56 @@ extension PlaneAnchor.Geometry: PlaneAnchorGeometryRepresentable {
 }
 
 extension PlaneAnchor.Geometry.Extent: PlaneAnchorGeometryExtentRepresentable {}
+
+#else
+
+public typealias HandAnchor = CapturedHandAnchor
+public typealias MeshAnchor = CapturedMeshAnchor
+public typealias WorldAnchor = CapturedWorldAnchor
+public typealias ImageAnchor = CapturedImageAnchor
+public typealias PlaneAnchor = CapturedPlaneAnchor
+public typealias HandSkeleton = CapturedHandSkeleton
+
+public extension HandAnchor {
+    enum Chirality: Sendable {
+        case left
+        case right
+    }
+}
+
+extension HandSkeleton {
+    public enum JointName: String, Sendable {
+        case forearmArm
+        case forearmWrist
+        case wrist
+        case thumbIntermediateBase
+        case thumbIntermediateTip
+        case thumbKnuckle
+        case thumbTip
+        case indexFingerIntermediateBase
+        case indexFingerIntermediateTip
+        case indexFingerKnuckle
+        case indexFingerMetacarpal
+        case indexFingerTip
+        case middleFingerIntermediateBase
+        case middleFingerIntermediateTip
+        case middleFingerKnuckle
+        case middleFingerMetacarpal
+        case middleFingerTip
+        case ringFingerIntermediateBase
+        case ringFingerIntermediateTip
+        case ringFingerKnuckle
+        case ringFingerMetacarpal
+        case ringFingerTip
+        case littleFingerIntermediateBase
+        case littleFingerIntermediateTip
+        case littleFingerKnuckle
+        case littleFingerMetacarpal
+        case littleFingerTip
+        
+        public var description: String {
+            rawValue
+        }
+    }
+}
 #endif

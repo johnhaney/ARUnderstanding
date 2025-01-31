@@ -5,8 +5,12 @@
 //  Created by John Haney on 4/13/24.
 //
 
-#if os(visionOS)
+#if canImport(ARKit)
 import ARKit
+#else
+import Foundation
+import RealityKit
+#endif
 
 public protocol ImageAnchorRepresentable: CapturableAnchor {
     var originFromAnchorTransform: simd_float4x4 { get }
@@ -37,8 +41,9 @@ public struct CapturedImageAnchor: TrackableAnchor, ImageAnchorRepresentable, Se
     public var estimatedPhysicalWidth: Float
     public var estimatedPhysicalHeight: Float
     public var description: String { "Image \(originFromAnchorTransform) \(referenceImageName ?? "n/a") \(estimatedPhysicalWidth)x\(estimatedPhysicalHeight)" }
-
-    public init(id: UUID, originFromAnchorTransform: simd_float4x4, isTracked: Bool, referenceImageName: String?, estimatedScaleFactor: Float, estimatedPhysicalWidth: Float, estimatedPhysicalHeight: Float) {
+    public var timestamp: TimeInterval
+    
+    public init(id: UUID, originFromAnchorTransform: simd_float4x4, isTracked: Bool, referenceImageName: String?, estimatedScaleFactor: Float, estimatedPhysicalWidth: Float, estimatedPhysicalHeight: Float, timestamp: TimeInterval) {
         self.id = id
         self.originFromAnchorTransform = originFromAnchorTransform
         self.isTracked = isTracked
@@ -46,12 +51,12 @@ public struct CapturedImageAnchor: TrackableAnchor, ImageAnchorRepresentable, Se
         self.estimatedScaleFactor = estimatedScaleFactor
         self.estimatedPhysicalWidth = estimatedPhysicalWidth
         self.estimatedPhysicalHeight = estimatedPhysicalHeight
+        self.timestamp = timestamp
     }
 }
 
 extension ImageAnchorRepresentable {
     public var captured: CapturedImageAnchor {
-        CapturedImageAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, isTracked: isTracked, referenceImageName: referenceImageName, estimatedScaleFactor: estimatedScaleFactor, estimatedPhysicalWidth: estimatedPhysicalWidth, estimatedPhysicalHeight: estimatedPhysicalHeight)
+        CapturedImageAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, isTracked: isTracked, referenceImageName: referenceImageName, estimatedScaleFactor: estimatedScaleFactor, estimatedPhysicalWidth: estimatedPhysicalWidth, estimatedPhysicalHeight: estimatedPhysicalHeight, timestamp: timestamp)
     }
 }
-#endif

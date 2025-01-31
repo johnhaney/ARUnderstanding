@@ -7,8 +7,10 @@
 
 #if os(visionOS)
 import ARKit
+#endif
+import Foundation
+import RealityKit
 
-@MainActor
 public enum ARProvider {
     case hands(HandTrackingProvider)
     case meshes(SceneReconstructionProvider)
@@ -58,4 +60,3 @@ extension ARProviderDefinition {
         }
     }
 }
-#endif

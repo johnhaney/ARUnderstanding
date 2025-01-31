@@ -5,8 +5,9 @@
 //  Created by John Haney on 4/14/24.
 //
 
-#if os(visionOS)
+#if canImport(ARKit)
 import ARKit
+#endif
 import RealityKit
 
 protocol Visualizable {
@@ -84,4 +85,3 @@ extension CapturedAnchorUpdate: Visualizable where AnchorType: Visualizable {
         anchor.update(visualization: visualization, with: materials)
     }
 }
-#endif

@@ -5,8 +5,9 @@
 //  Created by John Haney on 4/14/24.
 //
 
-#if os(visionOS)
+#if canImport(ARKit)
 import ARKit
+#endif
 import RealityKit
 
 extension CapturedPlaneAnchor: Visualizable {
@@ -55,4 +56,3 @@ extension PlaneAnchorRepresentable {
         await geometry.mesh.mesh(name: name)
     }
 }
-#endif

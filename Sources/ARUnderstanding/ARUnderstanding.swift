@@ -5,8 +5,9 @@
 //  Created by John Haney on 3/31/24.
 //
 
-#if os(visionOS)
+#if canImport(ARKit)
 import ARKit
+#endif
 import RealityKit
 import OSLog
 
@@ -185,6 +186,7 @@ public class ARUnderstanding {
     }
     
     private func monitorSessionEvents() async {
+#if os(visionOS)
         for await event in session.events {
             switch event {
             case .authorizationChanged(type: _, status: let status):
@@ -204,6 +206,7 @@ public class ARUnderstanding {
                 fatalError("Unhandled new event type \(event)")
             }
         }
+#endif
     }
 }
 
@@ -367,4 +370,3 @@ extension ARProvider {
         }
     }
 }
-#endif

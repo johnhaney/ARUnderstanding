@@ -5,8 +5,10 @@
 //  Created by John Haney on 4/13/24.
 //
 
-#if os(visionOS)
+#if canImport(ARKit)
 import ARKit
+#endif
+import Foundation
 import RealityKit
 
 public protocol PlaneAnchorRepresentable: CapturableAnchor {
@@ -35,20 +37,47 @@ public struct CapturedPlaneAnchor: Anchor, PlaneAnchorRepresentable, Sendable {
     public var classification: PlaneAnchor.Classification
     public var alignment: PlaneAnchor.Alignment
     public var description: String { "Plane \(originFromAnchorTransform) \(alignment) \(classification) \(geometry)" }
-
-    public init(id: UUID, originFromAnchorTransform: simd_float4x4, geometry: Geometry, classification: PlaneAnchor.Classification, alignment: PlaneAnchor.Alignment) {
+    public var timestamp: TimeInterval
+    
+    public init(id: UUID, originFromAnchorTransform: simd_float4x4, geometry: Geometry, classification: PlaneAnchor.Classification, alignment: PlaneAnchor.Alignment, timestamp: TimeInterval) {
         self.id = id
         self.originFromAnchorTransform = originFromAnchorTransform
         self.geometry = geometry
         self.classification = classification
         self.alignment = alignment
+        self.timestamp = timestamp
     }
+    
+#if !os(visionOS)
+    public enum Classification: String, Sendable, Hashable {
+        case ceiling
+        case door
+        case floor
+        case seat
+        case table
+        case wall
+        case window
+        case notAvailable
+        case undetermined
+        case unknown
+        
+        var description: String { rawValue }
+    }
+    
+    public enum Alignment: String, Sendable, Hashable {
+        case horizontal
+        case vertical
+        case slanted
+        
+        var description: String { rawValue }
+    }
+#endif
     
     public struct Geometry: PlaneAnchorGeometryRepresentable, Sendable {
         public var extent: Extent
         public var mesh: CapturedPlaneMeshGeometry
         public var captured: Self { self }
-
+        
         public init(extent: Extent, mesh: CapturedPlaneMeshGeometry) {
             self.extent = extent
             self.mesh = mesh
@@ -70,7 +99,7 @@ public struct CapturedPlaneAnchor: Anchor, PlaneAnchorRepresentable, Sendable {
 
 extension PlaneAnchorRepresentable {
     public var captured: CapturedPlaneAnchor {
-        CapturedPlaneAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, geometry: geometry.captured, classification: classification, alignment: alignment)
+        CapturedPlaneAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, geometry: geometry.captured, classification: classification, alignment: alignment, timestamp: timestamp)
     }
 }
 
@@ -86,6 +115,10 @@ public struct CapturedPlaneMeshGeometry: Codable, Sendable {
     var triangles: [[UInt32]]
     
     init(_ geometry: PlaneAnchor.Geometry) {
+        #if !os(visionOS)
+        vertices = geometry.mesh.vertices
+        triangles = geometry.mesh.triangles
+        #else
         vertices = []
         triangles = []
         
@@ -99,6 +132,7 @@ public struct CapturedPlaneMeshGeometry: Codable, Sendable {
             let face = geometry.vertexIndicesOf(faceWithIndex: Int(index))
             triangles.append([face[0],face[1],face[2]])
         }
+        #endif
     }
     
     func mesh(name: String) async -> MeshResource? {
@@ -121,6 +155,7 @@ public struct CapturedPlaneMeshGeometry: Codable, Sendable {
     }
 }
 
+#if os(visionOS)
 extension PlaneAnchor.Geometry {
     func vertex(at index: UInt32) -> (Float, Float, Float) {
         assert(meshVertices.format == MTLVertexFormat.float3, "Expected three floats (twelve bytes) per vertex.")
@@ -142,6 +177,7 @@ extension PlaneAnchor.Geometry {
         return vertexIndices
     }
 }
+#endif
 
 public protocol PlaneAnchorGeometryExtentRepresentable {
     var anchorFromExtentTransform: simd_float4x4 { get }
@@ -154,4 +190,3 @@ extension PlaneAnchorGeometryExtentRepresentable {
         CapturedPlaneAnchor.Geometry.Extent(anchorFromExtentTransform: anchorFromExtentTransform, width: width, height: height)
     }
 }
-#endif

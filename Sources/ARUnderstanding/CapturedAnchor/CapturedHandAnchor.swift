@@ -5,8 +5,12 @@
 //  Created by John Haney on 4/13/24.
 //
 
-#if os(visionOS)
+#if canImport(ARKit)
 import ARKit
+#else
+import Foundation
+import RealityKit
+#endif
 
 public protocol HandAnchorRepresentable: CapturableAnchor, Hashable {
     associatedtype HandSkeleton: HandSkeletonRepresentable
@@ -44,19 +48,21 @@ public struct CapturedHandAnchor: CapturableAnchor, HandAnchorRepresentable, Sen
     public let isTracked: Bool
     public let originFromAnchorTransform: simd_float4x4
     public var description: String { "Hand \(originFromAnchorTransform)" }
-
-    public init(id: UUID, chirality: HandAnchor.Chirality, handSkeleton: CapturedHandSkeleton?, isTracked: Bool, originFromAnchorTransform: simd_float4x4) {
+    public var timestamp: TimeInterval
+    
+    public init(id: UUID, chirality: HandAnchor.Chirality, handSkeleton: CapturedHandSkeleton?, isTracked: Bool, originFromAnchorTransform: simd_float4x4, timestamp: TimeInterval) {
         self.id = id
         self.chirality = chirality
         self.handSkeleton = handSkeleton
         self.isTracked = isTracked
         self.originFromAnchorTransform = originFromAnchorTransform
+        self.timestamp = timestamp
     }
 }
 
 extension CapturedHandAnchor {
     public static var neutralPose: CapturedHandAnchor {
-        CapturedHandAnchor(id: UUID(), chirality: .left, handSkeleton: CapturedHandSkeleton.neutralPose, isTracked: false, originFromAnchorTransform: simd_float4x4.init(diagonal: SIMD4<Float>(repeating: 1)))
+        CapturedHandAnchor(id: UUID(), chirality: .left, handSkeleton: CapturedHandSkeleton.neutralPose, isTracked: false, originFromAnchorTransform: simd_float4x4.init(diagonal: SIMD4<Float>(repeating: 1)), timestamp: TimeInterval(0))
     }
 }
 
@@ -119,7 +125,7 @@ public struct CapturedHandSkeleton: HandSkeletonRepresentable, Sendable {
 
 extension HandAnchorRepresentable {
     public var captured: CapturedHandAnchor {
-        CapturedHandAnchor(id: id, chirality: chirality, handSkeleton: handSkeleton?.captured, isTracked: isTracked, originFromAnchorTransform: originFromAnchorTransform)
+        CapturedHandAnchor(id: id, chirality: chirality, handSkeleton: handSkeleton?.captured, isTracked: isTracked, originFromAnchorTransform: originFromAnchorTransform, timestamp: timestamp)
     }
 }
 
@@ -184,4 +190,4 @@ extension HandSkeletonJointRepresentable {
         )
     }
 }
-#endif
+

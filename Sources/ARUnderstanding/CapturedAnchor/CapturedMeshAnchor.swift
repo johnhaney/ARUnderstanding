@@ -7,6 +7,9 @@
 
 #if os(visionOS)
 import ARKit
+#else
+import Foundation
+#endif
 import RealityKit
 
 public protocol MeshAnchorRepresentable: CapturableAnchor {
@@ -32,16 +35,39 @@ public struct CapturedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
     public var originFromAnchorTransform: simd_float4x4
     public var geometry: Geometry
     public var description: String { "Mesh \(originFromAnchorTransform) \(geometry)" }
+    public var timestamp: TimeInterval
 
-    public init(id: UUID, originFromAnchorTransform: simd_float4x4, geometry: Geometry) {
+    public init(id: UUID, originFromAnchorTransform: simd_float4x4, geometry: Geometry, timestamp: TimeInterval) {
         self.id = id
         self.originFromAnchorTransform = originFromAnchorTransform
         self.geometry = geometry
+        self.timestamp = timestamp
+    }
+    
+    public enum MeshClassification: Int {
+        #warning("TODO: Make sure these match rawValue with actual API")
+        case ceiling
+        case door
+        case floor
+        case stairs
+        case wall
+        case window
+        case bed
+        case cabinet
+        case homeAppliance
+        case seat
+        case table
+        case plant
+        case tv
+        case none
     }
     
     public struct Geometry: MeshAnchorGeometryRepresentable, Sendable {
         public var mesh: CapturedMeshGeometry {
             meshSource.mesh
+        }
+        public var classifications: [Int?] {
+            meshSource.classifications
         }
         private var meshSource: CapturedMeshGeometrySource
         
@@ -59,6 +85,25 @@ public struct CapturedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
 #if os(visionOS)
                 case .mesh(let geometry):
                     CapturedMeshGeometry(geometry)
+#endif
+                }
+            }
+            
+            var classifications: [Int?] {
+                switch self {
+                case .captured(let capturedPlaneMeshGeometry):
+                    return capturedPlaneMeshGeometry.classifications
+#if os(visionOS)
+                case .mesh(let geometry):
+                    let classifications: [Int?]
+                    if let geometryClassifications = geometry.classifications {
+                        classifications = (0 ..< geometryClassifications.count).map { index in
+                            geometry.classification(at: index)
+                        }
+                    } else {
+                        classifications = []
+                    }
+                    return classifications
 #endif
                 }
             }
@@ -151,7 +196,7 @@ public struct CapturedMeshGeometry: Codable, Sendable {
 
 extension MeshAnchorRepresentable {
     public var captured: CapturedMeshAnchor {
-        CapturedMeshAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, geometry: geometry.captured)
+        CapturedMeshAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, geometry: geometry.captured, timestamp: timestamp)
     }
 }
 
@@ -167,6 +212,7 @@ extension MeshAnchorGeometryRepresentable {
 }
 
 
+#if os(visionOS)
 extension MeshAnchor.Geometry {
     func classification(at index: Int) -> Int? {
         guard let classifications else { return nil }

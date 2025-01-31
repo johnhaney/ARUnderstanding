@@ -5,8 +5,10 @@
 //  Created by John Haney on 4/7/24.
 //
 
-#if os(visionOS)
+import Foundation
+#if canImport(ARKit)
 import ARKit
+#endif
 import RealityKit
 
 public protocol CapturableAnchor: Anchor, Hashable {
@@ -23,7 +25,7 @@ public enum CapturedAnchor: Sendable, Hashable {
     case device(CapturedAnchorUpdate<CapturedDeviceAnchor>)
 }
 
-public struct CapturedAnchorUpdate<AnchorType: Hashable>: Sendable, Hashable where AnchorType: Anchor {
+public struct CapturedAnchorUpdate<AnchorType: Hashable & Identifiable>: Sendable, Hashable where AnchorType: Anchor {
     public let anchor: AnchorType
     public let timestamp: TimeInterval
     public let event: CapturedAnchorEvent
@@ -108,24 +110,23 @@ extension CapturableAnchor {
     }
 }
 
-extension AnchorUpdate where AnchorType: CapturableAnchor {
-    var captured: CapturedAnchorUpdate<AnchorType.CapturedType> {
-        let capturedAnchor: AnchorType.CapturedType = anchor.captured
-        
-        return CapturedAnchorUpdate<AnchorType.CapturedType>(anchor: capturedAnchor, timestamp: self.timestamp, event: self.event.captured)
-    }
-}
-
-extension AnchorUpdate.Event where AnchorType: CapturableAnchor {
-    var captured: CapturedAnchorEvent {
-        switch self {
-        case .added:
-            .added
-        case .updated:
-            .updated
-        case .removed:
-            .removed
-        }
-    }
-}
-#endif
+//extension AnchorUpdate where AnchorType: CapturableAnchor {
+//    var captured: CapturedAnchorUpdate<AnchorType.CapturedType> {
+//        let capturedAnchor: AnchorType.CapturedType = anchor.captured
+//        
+//        return CapturedAnchorUpdate<AnchorType.CapturedType>(anchor: capturedAnchor, timestamp: self.timestamp, event: self.event.captured)
+//    }
+//}
+//
+//extension AnchorUpdate.Event where AnchorType: CapturableAnchor {
+//    var captured: CapturedAnchorEvent {
+//        switch self {
+//        case .added:
+//            .added
+//        case .updated:
+//            .updated
+//        case .removed:
+//            .removed
+//        }
+//    }
+//}
