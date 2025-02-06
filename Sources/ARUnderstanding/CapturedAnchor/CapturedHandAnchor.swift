@@ -119,7 +119,11 @@ public struct CapturedHandSkeleton: HandSkeletonRepresentable, Sendable {
     }
     
     public static var neutralPose: CapturedHandSkeleton {
-        HandSkeleton.neutralPose.captured
+        if HandSkeleton.self != CapturedHandSkeleton.self {
+            HandSkeleton.neutralPose.captured
+        } else {
+            CapturedHandSkeleton(allJoints: [])
+        }
     }
 }
 

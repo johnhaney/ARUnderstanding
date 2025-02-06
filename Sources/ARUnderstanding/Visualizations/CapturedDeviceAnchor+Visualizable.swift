@@ -19,7 +19,7 @@ extension CapturedDeviceAnchor: Visualizable {
         entity.addChild(model)
         let model2 = model.clone(recursive: true)
         model2.transform = Transform(scale: SIMD3<Float>(repeating: 30))
-        entity.addChild(model)
+        entity.addChild(model2)
         return entity
     }
     

@@ -66,7 +66,7 @@ public struct CapturedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
         public var mesh: CapturedMeshGeometry {
             meshSource.mesh
         }
-        public var classifications: [Int?] {
+        public var classifications: [UInt8?] {
             meshSource.classifications
         }
         private var meshSource: CapturedMeshGeometrySource
@@ -89,13 +89,13 @@ public struct CapturedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
                 }
             }
             
-            var classifications: [Int?] {
+            var classifications: [UInt8?] {
                 switch self {
                 case .captured(let capturedPlaneMeshGeometry):
                     return capturedPlaneMeshGeometry.classifications
 #if os(visionOS)
                 case .mesh(let geometry):
-                    let classifications: [Int?]
+                    let classifications: [UInt8?]
                     if let geometryClassifications = geometry.classifications {
                         classifications = (0 ..< geometryClassifications.count).map { index in
                             geometry.classification(at: index)
@@ -135,7 +135,30 @@ public struct CapturedMeshGeometry: Codable, Sendable {
     let vertices: [SIMD3<Float>]
     let normals: [SIMD3<Float>]
     let triangles: [[UInt32]]
-    let classifications: [Int?]
+    let classifications: [UInt8?]
+    
+    enum CodingKeys: CodingKey {
+        case vertices
+        case normals
+        case triangles
+        case classifications
+    }
+    
+    public func encode(to encoder: any Encoder) throws {
+        var container = encoder.container(keyedBy: CodingKeys.self)
+        try container.encode(self.vertices.map({ $0.x.isNaN ? nil : $0}), forKey: .vertices)
+        try container.encode(self.normals.map({ $0.x.isNaN ? nil : $0}), forKey: .normals)
+        try container.encode(self.triangles, forKey: .triangles)
+        try container.encode(self.classifications, forKey: .classifications)
+    }
+    
+    public init(from decoder: any Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        self.vertices = (try container.decode([SIMD3<Float>?].self, forKey: .vertices)).map { $0 ?? [Float.nan, Float.nan, Float.nan] }
+        self.normals = (try container.decode([SIMD3<Float>?].self, forKey: .normals)).map { $0 ?? [Float.nan, Float.nan, Float.nan] }
+        self.triangles = try container.decode([[UInt32]].self, forKey: .triangles)
+        self.classifications = try container.decode([UInt8?].self, forKey: .classifications)
+    }
     
     #if os(visionOS)
     init(_ geometry: MeshAnchor.Geometry) {
@@ -171,7 +194,7 @@ public struct CapturedMeshGeometry: Codable, Sendable {
         do {
             let triangles = MeshDescriptor.Primitives.triangles(faces)
             let normals = MeshBuffers.Normals(normals)
-            
+
             mesh.positions = positions
             mesh.primitives = triangles
             mesh.normals = normals
@@ -214,11 +237,11 @@ extension MeshAnchorGeometryRepresentable {
 
 #if os(visionOS)
 extension MeshAnchor.Geometry {
-    func classification(at index: Int) -> Int? {
+    func classification(at index: Int) -> UInt8? {
         guard let classifications else { return nil }
-        assert(classifications.format == MTLVertexFormat.int, "Expected unsigned int per classification.")
+        assert(classifications.format == MTLVertexFormat.uchar, "Expected unsigned int per classification.")
         let classificationPointer = classifications.buffer.contents().advanced(by: classifications.offset + (classifications.stride * index))
-        let classification = classificationPointer.assumingMemoryBound(to: Int.self).pointee
+        let classification = classificationPointer.assumingMemoryBound(to: UInt8.self).pointee
         return classification
     }
     

@@ -109,7 +109,36 @@ extension HandSkeleton {
         case littleFingerTip
         
         public var description: String {
-            rawValue
+            switch self {
+            case .forearmArm: "forearmArm"
+            case .forearmWrist: "forearmWrist"
+            case .wrist: "wrist"
+            case .thumbIntermediateBase: "thumbIntermediateBase"
+            case .thumbIntermediateTip: "thumbIntermediateTip"
+            case .thumbKnuckle: "thumbKnuckle"
+            case .thumbTip: "thumbTip"
+            case .indexFingerIntermediateBase: "indexFingerIntermediateBase"
+            case .indexFingerIntermediateTip: "indexFingerIntermediateTip"
+            case .indexFingerKnuckle: "indexFingerKnuckle"
+            case .indexFingerMetacarpal: "indexFingerMetacarpal"
+            case .indexFingerTip: "indexFingerTip"
+            case .middleFingerIntermediateBase: "middleFingerIntermediateBase"
+            case .middleFingerIntermediateTip: "middleFingerIntermediateTip"
+            case .middleFingerKnuckle: "middleFingerKnuckle"
+            case .middleFingerMetacarpal: "middleFingerMetacarpal"
+            case .middleFingerTip: "middleFingerTip"
+            case .ringFingerIntermediateBase: "ringFingerIntermediateBase"
+            case .ringFingerIntermediateTip: "ringFingerIntermediateTip"
+            case .ringFingerKnuckle: "ringFingerKnuckle"
+            case .ringFingerMetacarpal: "ringFingerMetacarpal"
+            case .ringFingerTip: "ringFingerTip"
+            case .littleFingerIntermediateBase: "littleFingerIntermediateBase"
+            case .littleFingerIntermediateTip: "littleFingerIntermediateTip"
+            case .littleFingerKnuckle: "littleFingerKnuckle"
+            case .littleFingerMetacarpal: "littleFingerMetacarpal"
+            case .littleFingerTip: "littleFingerTip"
+
+            }
         }
     }
 }
