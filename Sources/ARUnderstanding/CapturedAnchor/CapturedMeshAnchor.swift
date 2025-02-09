@@ -80,8 +80,8 @@ public struct CapturedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
 #endif
             var mesh: CapturedMeshGeometry {
                 switch self {
-                case .captured(let capturedPlaneMeshGeometry):
-                    capturedPlaneMeshGeometry
+                case .captured(let capturedMeshGeometry):
+                    capturedMeshGeometry
 #if os(visionOS)
                 case .mesh(let geometry):
                     CapturedMeshGeometry(geometry)
@@ -161,6 +161,10 @@ public struct CapturedMeshGeometry: Codable, Sendable {
     }
     
     #if os(visionOS)
+    init(_ geometry: any MeshAnchorGeometryRepresentable) {
+        self = geometry.mesh
+    }
+    
     init(_ geometry: MeshAnchor.Geometry) {
         vertices = (0..<UInt32(geometry.vertices.count)).map { index in
             let vertex = geometry.vertex(at: index)

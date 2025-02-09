@@ -38,6 +38,8 @@ extension CapturedAnchor: Visualizable {
             capturedWorldAnchor.visualize(with: materials)
         case .device(let capturedDeviceAnchor):
             capturedDeviceAnchor.visualize(with: materials)
+        case .room(let capturedRoomAnchor):
+            capturedRoomAnchor.visualize(with: materials)
         }
     }
     
@@ -55,6 +57,8 @@ extension CapturedAnchor: Visualizable {
             capturedWorldAnchor.update(visualization: visualization, with: materials)
         case .device(let capturedDeviceAnchor):
             capturedDeviceAnchor.update(visualization: visualization, with: materials)
+        case .room(let capturedRoomAnchor):
+            capturedRoomAnchor.update(visualization: visualization, with: materials)
         }
     }
     
@@ -72,6 +76,8 @@ extension CapturedAnchor: Visualizable {
             return SimpleMaterial(color: .cyan, isMetallic: false)
         case .device:
             return SimpleMaterial(color: .magenta, isMetallic: false)
+        case .room:
+            return SimpleMaterial(color: .yellow, isMetallic: false)
         }
     }
 }

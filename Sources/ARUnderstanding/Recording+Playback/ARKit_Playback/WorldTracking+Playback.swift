@@ -41,7 +41,7 @@ extension AnchorPlayback {
                     switch $0 {
                     case .device(let update):
                         update.anchor
-                    case .hand, .image, .mesh, .plane, .world:
+                    case .hand, .image, .mesh, .plane, .world, .room:
                         nil
                     }
                 }).last

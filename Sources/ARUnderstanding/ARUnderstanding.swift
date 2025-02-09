@@ -225,6 +225,8 @@ extension ARProvider {
             return true
         case (.world, .world):
             return true
+        case (.room, .room):
+            return true
         case (.hands, _):
             return false
         case (.meshes, _):
@@ -234,6 +236,8 @@ extension ARProvider {
         case (.image, _):
             return false
         case (.world, _):
+            return false
+        case (.room, _):
             return false
         }
     }
@@ -250,6 +254,8 @@ extension ARProvider {
             return planeAnchorStream(provider)
         case .world(let provider, let queryDevice):
             return worldAnchorStream(provider, queryDevice: queryDevice)
+        case .room(let provider):
+            return roomAnchorStream(provider)
         }
     }
 
@@ -265,6 +271,8 @@ extension ARProvider {
             return imageTrackingProvider.state == .initialized
         case .world(let worldTrackingProvider, _):
             return worldTrackingProvider.state == .initialized
+        case .room(let roomTrackingProvider):
+            return roomTrackingProvider.state == .initialized
         }
     }
     
@@ -280,6 +288,8 @@ extension ARProvider {
             return ImageTrackingProvider.isSupported
         case .world(_, _):
             return WorldTrackingProvider.isSupported
+        case .room(_):
+            return RoomTrackingProvider.isSupported
         }
     }
     
@@ -295,6 +305,8 @@ extension ARProvider {
             return imageTrackingProvider
         case .world(let worldTrackingProvider, _):
             return worldTrackingProvider
+        case .room(let roomTrackingProvider):
+            return roomTrackingProvider
         }
     }
 }
@@ -366,6 +378,16 @@ extension ARProvider {
                 }
             case .none:
                 break
+            }
+        }
+    }
+    
+    func roomAnchorStream(_ provider: RoomTrackingProvider) -> AsyncStream<CapturedAnchor> {
+        AsyncStream { continuation in
+            Task {
+                for await update in provider.anchorUpdates {
+                    continuation.yield(.room(update.captured))
+                }
             }
         }
     }

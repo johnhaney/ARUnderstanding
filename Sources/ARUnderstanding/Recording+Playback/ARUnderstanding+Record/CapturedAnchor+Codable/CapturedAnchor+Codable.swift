@@ -37,6 +37,9 @@ extension CapturedAnchor: Codable {
         case .device(let capturedAnchorUpdate):
             try container.encode("device", forKey: .type)
             try container.encode(capturedAnchorUpdate, forKey: .update)
+        case .room(let capturedAnchorUpdate):
+            try container.encode("room", forKey: .type)
+            try container.encode(capturedAnchorUpdate, forKey: .update)
         }
     }
     
@@ -62,6 +65,9 @@ extension CapturedAnchor: Codable {
         case "device":
             let update = try container.decode(CapturedAnchorUpdate<CapturedDeviceAnchor>.self, forKey: .update)
             self = .device(update)
+        case "room":
+            let update = try container.decode(CapturedAnchorUpdate<CapturedRoomAnchor>.self, forKey: .update)
+            self = .room(update)
         default:
             throw Error.decodingError
         }

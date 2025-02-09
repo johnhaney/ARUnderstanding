@@ -53,6 +53,9 @@ extension DeviceAnchor: DeviceAnchorRepresentable {}
 extension WorldAnchor: @retroactive Hashable {}
 extension WorldAnchor: WorldAnchorRepresentable {}
 
+extension RoomAnchor: @retroactive Hashable {}
+extension RoomAnchor: RoomAnchorRepresentable {}
+
 extension PlaneAnchor.Geometry: PlaneAnchorGeometryRepresentable {
     public var mesh: CapturedPlaneMeshGeometry { CapturedPlaneMeshGeometry(self) }
     public var captured: CapturedPlaneAnchor.Geometry {
