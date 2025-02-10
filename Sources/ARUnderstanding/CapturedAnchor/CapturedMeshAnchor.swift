@@ -45,21 +45,20 @@ public struct CapturedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
     }
     
     public enum MeshClassification: Int {
-        #warning("TODO: Make sure these match rawValue with actual API")
-        case ceiling
-        case door
-        case floor
-        case stairs
-        case wall
-        case window
-        case bed
-        case cabinet
-        case homeAppliance
-        case seat
-        case table
-        case plant
-        case tv
-        case none
+        case none = 0
+        case wall = 1
+        case floor = 2
+        case ceiling = 3
+        case table = 4
+        case seat = 5
+        case window = 6
+        case door = 7
+        case stairs = 8
+        case bed = 9
+        case cabinet = 10
+        case homeAppliance = 11
+        case tv = 12
+        case plant = 13
     }
     
     public struct Geometry: MeshAnchorGeometryRepresentable, Sendable {

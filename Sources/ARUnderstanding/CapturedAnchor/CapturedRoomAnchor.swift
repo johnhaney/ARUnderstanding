@@ -13,6 +13,7 @@ import RealityKit
 
 public protocol RoomAnchorRepresentable: CapturableAnchor {
     associatedtype Geometry: MeshAnchorGeometryRepresentable
+    associatedtype ClassifiedGeometry: RoomAnchorGeometryRepresentable
     var id: UUID { get }
     var originFromAnchorTransform: simd_float4x4 { get }
     var geometry: Geometry { get }
@@ -21,14 +22,21 @@ public protocol RoomAnchorRepresentable: CapturableAnchor {
     var isCurrentRoom: Bool { get }
     func geometries(of classification: MeshAnchor.MeshClassification) -> [Geometry]
     func contains(_ point: SIMD3<Float>) -> Bool
-    var classifiedGeometries: [MeshAnchor.MeshClassification: [Geometry]] { get }
+    var classifiedGeometries: ClassifiedGeometry { get }
 //    var capturedClassifiedGeometries: [MeshAnchor.MeshClassification: [CapturedMeshAnchor.Geometry]] { get }
 //    var capturedGeometry: CapturedRoomAnchor.CapturedGeometry { get }
 }
 
-extension Dictionary where Key == MeshAnchor.MeshClassification, Value == [any MeshAnchorGeometryRepresentable] {
-    var captured: [MeshAnchor.MeshClassification: [CapturedMeshAnchor.Geometry]] {
-        self.mapValues({ $0.map(\.captured) })
+extension RoomAnchorGeometryRepresentable {
+    var captured: CapturedRoomAnchor.ClassifiedGeometry {
+        let capturedGeometry = CapturedRoomGeometry(classifiedGeometries: classifiedGeometries)
+        return CapturedRoomAnchor.ClassifiedGeometry.init(room: capturedGeometry)
+    }
+}
+
+extension RoomAnchorRepresentable where ClassifiedGeometry.MeshGeometry == Geometry {
+    public func geometries(of classification: MeshAnchor.MeshClassification) -> [Geometry] {
+        classifiedGeometries.classifiedGeometries[classification] ?? []
     }
 }
 
@@ -42,50 +50,36 @@ extension RoomAnchorRepresentable {
     }
 }
 
-extension RoomAnchor {
-    var capturedGeometry: CapturedRoomAnchor.CapturedGeometry {
-        CapturedRoomAnchor.CapturedGeometry(room: self)
-    }
-}
-
 public struct CapturedRoomAnchor: Anchor, RoomAnchorRepresentable, Sendable {
-    public typealias Geometry = CapturedGeometry.MeshGeometry
+    public typealias Geometry = CapturedMeshAnchor.Geometry
+    public typealias ClassifiedGeometry = CapturedGeometries
     public typealias ID = UUID
     public var id: UUID
     public var originFromAnchorTransform: simd_float4x4
-    public var capturedGeometry: CapturedGeometry
+    public var geometry: Geometry
+    public var classifiedGeometries: ClassifiedGeometry
     public var planeAnchorIDs: [UUID]
     public var meshAnchorIDs: [UUID]
     public var isCurrentRoom: Bool
     public var description: String { "Room \(originFromAnchorTransform)" }
     public var timestamp: TimeInterval
 
-    public var geometry: Geometry {
-        capturedGeometry.mesh
-    }
-    public var classifiedGeometries: [MeshAnchor.MeshClassification : [Geometry]] {
-        capturedGeometry.classifiedGeometries
-    }
-
     public func geometries(of classification: MeshAnchor.MeshClassification) -> [Geometry] {
-        classifiedGeometries[classification] ?? []
+        classifiedGeometries.classifiedGeometries[classification] ?? []
     }
     
     public func contains(_ point: SIMD3<Float>) -> Bool {
         false
     }
     
-    public struct CapturedGeometry: RoomAnchorGeometryRepresentable, Sendable, Codable {
-        public typealias MeshGeometry = CapturedMeshGeometry
-        public var mesh: MeshGeometry {
-            meshSource.mesh
-        }
-        public var classifiedGeometries: [MeshAnchor.MeshClassification : [MeshGeometry]] {
+    public struct CapturedGeometries: RoomAnchorGeometryRepresentable, Sendable {
+        public typealias MeshGeometry = CapturedMeshAnchor.Geometry
+        public var classifiedGeometries: [MeshAnchor.MeshClassification : [CapturedMeshAnchor.Geometry]] {
             meshSource.classifiedGeometries
         }
-        private var meshSource: CapturedRoomGeometrySource
+        internal var meshSource: CapturedRoomGeometrySource
         
-        public var captured: CapturedRoomAnchor.CapturedGeometry { self }
+        public var captured: CapturedRoomAnchor.CapturedGeometries { self }
         
         enum CapturedRoomGeometrySource : Sendable {
             case captured(CapturedRoomGeometry)
@@ -93,24 +87,13 @@ public struct CapturedRoomAnchor: Anchor, RoomAnchorRepresentable, Sendable {
             case room(any RoomAnchorRepresentable)
 #endif
             
-            var mesh: CapturedMeshGeometry {
-                switch self {
-                case .captured(let capturedRoomGeometry):
-                    capturedRoomGeometry.geometry
-#if os(visionOS)
-                case .room(let room):
-                    CapturedMeshGeometry(room.geometry)
-#endif
-                }
-            }
-            
-            var classifiedGeometries: [MeshAnchor.MeshClassification: [CapturedMeshGeometry]] {
+            var classifiedGeometries: [MeshAnchor.MeshClassification: [CapturedMeshAnchor.Geometry]] {
                 switch self {
                 case .captured(let capturedRoomGeometry):
                     capturedRoomGeometry.classifiedGeometries
 #if os(visionOS)
                 case .room(let room):
-                    room.classifiedGeometries.mapValues({ $0.map({ CapturedMeshGeometry($0) }) })
+                    room.classifiedGeometries.classifiedGeometries.mapValues({ $0.map({ $0.captured }) })
 #endif
                 }
             }
@@ -120,11 +103,11 @@ public struct CapturedRoomAnchor: Anchor, RoomAnchorRepresentable, Sendable {
             self.meshSource = .captured(room)
         }
         
+#if os(visionOS)
         public init(room: any RoomAnchorRepresentable) {
             self.meshSource = .room(room)
         }
         
-#if os(visionOS)
         public init(room: RoomAnchor) {
             self.meshSource = .room(room)
         }
@@ -143,25 +126,21 @@ extension CapturedMeshGeometry: MeshAnchorGeometryRepresentable {
 }
 
 public struct CapturedRoomGeometry: Codable, Sendable {
-    let geometry: CapturedMeshGeometry
-    let classifiedGeometries: [MeshAnchor.MeshClassification: [CapturedMeshGeometry]]
+    let classifiedGeometries: [MeshAnchor.MeshClassification: [CapturedMeshAnchor.Geometry]]
     
+    init<T: MeshAnchorGeometryRepresentable>(classifiedGeometries: [MeshAnchor.MeshClassification: [T]]) {
+        self.classifiedGeometries = classifiedGeometries.mapValues({ $0.map(\.captured) })
+    }
+
     #if os(visionOS)
-    init(_ geometry: RoomAnchor.Geometry, classifiedGeometries: [MeshAnchor.MeshClassification: [RoomAnchor.Geometry]]) {
-        self.geometry = CapturedMeshGeometry(geometry)
-        self.classifiedGeometries = classifiedGeometries.mapValues({ $0.map(CapturedMeshGeometry.init) })
-    }
-
-    init(_ room: RoomAnchor) {
-        self.geometry = CapturedMeshGeometry(room.geometry)
-        self.classifiedGeometries = room.classifiedGeometries.mapValues({ $0.map(CapturedMeshGeometry.init) })
-    }
-
     init(_ room: any RoomAnchorRepresentable) {
-        self.geometry = CapturedMeshGeometry(room.geometry)
-        self.classifiedGeometries = room.classifiedGeometries.mapValues({ $0.map(CapturedMeshGeometry.init) })
+        self.classifiedGeometries = room.classifiedGeometries.classifiedGeometries.mapValues({ $0.map(\.captured) })
     }
     #endif
+}
+
+extension MeshAnchor.MeshClassification: Codable, @unchecked Sendable {
+    
 }
 
 extension RoomAnchorRepresentable {
@@ -169,25 +148,21 @@ extension RoomAnchorRepresentable {
         CapturedRoomAnchor(
             id: id,
             originFromAnchorTransform: originFromAnchorTransform,
-            capturedGeometry: capturedGeometry,
+            geometry: geometry.captured,
+            classifiedGeometries: classifiedGeometries.captured,
             planeAnchorIDs: planeAnchorIDs,
             meshAnchorIDs: meshAnchorIDs,
             isCurrentRoom: isCurrentRoom,
             timestamp: timestamp)
     }
-    
-    var capturedGeometry: CapturedRoomAnchor.CapturedGeometry {
-        CapturedRoomAnchor.CapturedGeometry(room: self)
-    }
 }
 
-//extension RoomAnchorGeometryRepresentable {
-//    var captured: CapturedRoomAnchor.CapturedGeometry {
-//        CapturedRoomAnchor.CapturedGeometry(mesh: mesh.captured, classifiedGeometries:         classifiedGeometries.mapValues({ $0.map(\.captured) }))
-//    }
-//}
-
-extension MeshAnchor.MeshClassification: @retroactive CaseIterable {
+#if os(visionOS)
+extension MeshAnchor.MeshClassification: @retroactive CaseIterable {}
+#else
+extension MeshAnchor.MeshClassification: CaseIterable {}
+#endif
+extension MeshAnchor.MeshClassification {
     public static var allCases: [MeshAnchor.MeshClassification] {
         [
             .none,
@@ -209,31 +184,24 @@ extension MeshAnchor.MeshClassification: @retroactive CaseIterable {
 }
 
 public protocol RoomAnchorGeometryRepresentable {
-    associatedtype MeshGeometry = CapturedMeshGeometry
-    var mesh: MeshGeometry { get }
+    associatedtype MeshGeometry: MeshAnchorGeometryRepresentable
     var classifiedGeometries: [MeshAnchor.MeshClassification: [MeshGeometry]] { get }
 }
 
-extension MeshAnchor.MeshClassification: Codable, Sendable {
-    
-}
-
-public struct CapturedRoomMeshGeometry: Codable, Sendable {
-    var geometry: CapturedMeshAnchor.Geometry
-    var classifiedGeometries: [MeshAnchor.MeshClassification: [CapturedMeshAnchor.Geometry]]
-
-#if !os(visionOS)
-    init(_ roomAnchor: RoomAnchor) {
-        geometry = roomAnchor.geometry.captured
-        classifiedGeometries = roomAnchor.capturedClassifiedGeometries
-    }
-#endif
-}
-
+#if os(visionOS)
 extension RoomAnchor {
-    public var classifiedGeometries: [MeshAnchor.MeshClassification : [MeshAnchor.Geometry]] {
-        Dictionary(uniqueKeysWithValues: MeshAnchor.MeshClassification.allCases.map { classification in
-            (classification, self.geometries(of: classification))
+    public typealias ClassifiedGeometry = RoomAnchorGeometryContainer
+    public var classifiedGeometries: RoomAnchorGeometryContainer {
+        RoomAnchorGeometryContainer(room: self)
+    }
+}
+
+public struct RoomAnchorGeometryContainer: RoomAnchorGeometryRepresentable {
+    let room: RoomAnchor
+    public var classifiedGeometries: [MeshAnchor.MeshClassification: [MeshAnchor.Geometry]] {
+        Dictionary(uniqueKeysWithValues: MeshAnchor.MeshClassification.allCases.map {
+            ($0, room.geometries(of: $0))
         })
     }
 }
+#endif

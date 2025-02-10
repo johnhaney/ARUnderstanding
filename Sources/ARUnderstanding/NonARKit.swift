@@ -110,6 +110,19 @@ final public class WorldTrackingProvider: DataProvider, WorldTrackingProviderRep
     }
 }
 
+final public class RoomTrackingProvider: DataProvider, RoomTrackingProviderRepresentable, Sendable {
+    public static var requiredAuthorizations: [ARKitSession.AuthorizationType] { [] }
+    
+    public static var isSupported: Bool { true }
+    public var description: String { "RoomTrackingProvider" }
+    public var state: DataProviderState { .running }
+    public init() {}
+
+    public var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedRoomAnchor>> {
+        AsyncStream { nil }
+    }
+}
+
 public enum DataProviderState: Sendable {
     case initialized
     case running

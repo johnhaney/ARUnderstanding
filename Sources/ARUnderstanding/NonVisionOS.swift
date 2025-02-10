@@ -73,6 +73,7 @@ public typealias WorldAnchor = CapturedWorldAnchor
 public typealias ImageAnchor = CapturedImageAnchor
 public typealias PlaneAnchor = CapturedPlaneAnchor
 public typealias HandSkeleton = CapturedHandSkeleton
+public typealias RoomAnchor = CapturedRoomAnchor
 
 public extension HandAnchor {
     enum Chirality: Sendable {
