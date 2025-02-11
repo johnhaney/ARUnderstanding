@@ -16,6 +16,7 @@ public enum ARProvider {
     case meshes(SceneReconstructionProvider)
     case planes(PlaneDetectionProvider)
     case image(ImageTrackingProvider)
+    case object(ObjectTrackingProvider)
     case room(RoomTrackingProvider)
     case world(WorldTrackingProvider, QueryDeviceAnchor)
 }
@@ -31,6 +32,7 @@ public enum ARProviderDefinition: Equatable {
     case slantedPlanes
     case room
     case image(resourceGroupName: String)
+    case object(referenceObjects: [ReferenceObject])
     case world
 }
 
@@ -60,6 +62,8 @@ extension ARProviderDefinition {
             .planes(PlaneDetectionProvider(alignments: [.slanted]))
         case .image(let resourceGroupName):
             .image(ImageTrackingProvider(referenceImages: ReferenceImage.loadReferenceImages(inGroupNamed: resourceGroupName)))
+        case .object(let referenceObjects):
+                .object(ObjectTrackingProvider(referenceObjects: referenceObjects))
         case .world:
             .world(WorldTrackingProvider(), .none)
         case .room:

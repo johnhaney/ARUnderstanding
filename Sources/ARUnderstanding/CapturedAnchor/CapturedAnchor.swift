@@ -24,6 +24,7 @@ public enum CapturedAnchor: Sendable, Hashable {
     case world(CapturedAnchorUpdate<CapturedWorldAnchor>)
     case device(CapturedAnchorUpdate<CapturedDeviceAnchor>)
     case room(CapturedAnchorUpdate<CapturedRoomAnchor>)
+    case object(CapturedAnchorUpdate<CapturedObjectAnchor>)
 }
 
 public struct CapturedAnchorUpdate<AnchorType: Hashable & Identifiable>: Sendable, Hashable where AnchorType: Anchor {
@@ -55,6 +56,8 @@ extension CapturedAnchor {
             capturedAnchorUpdate.anchor.id
         case .image(let capturedAnchorUpdate):
             capturedAnchorUpdate.anchor.id
+        case .object(let capturedAnchorUpdate):
+            capturedAnchorUpdate.anchor.id
         case .world(let capturedAnchorUpdate):
             capturedAnchorUpdate.anchor.id
         case .device(let capturedAnchorUpdate):
@@ -74,6 +77,8 @@ extension CapturedAnchor {
             capturedAnchorUpdate.timestamp
         case .image(let capturedAnchorUpdate):
             capturedAnchorUpdate.timestamp
+        case .object(let capturedAnchorUpdate):
+            capturedAnchorUpdate.timestamp
         case .world(let capturedAnchorUpdate):
             capturedAnchorUpdate.timestamp
         case .device(let capturedAnchorUpdate):
@@ -92,6 +97,8 @@ extension CapturedAnchor {
         case .plane(let capturedAnchorUpdate):
             capturedAnchorUpdate.event
         case .image(let capturedAnchorUpdate):
+            capturedAnchorUpdate.event
+        case .object(let capturedAnchorUpdate):
             capturedAnchorUpdate.event
         case .world(let capturedAnchorUpdate):
             capturedAnchorUpdate.event

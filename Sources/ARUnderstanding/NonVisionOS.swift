@@ -43,6 +43,13 @@ extension ImageAnchor: ImageAnchorRepresentable {
     public var estimatedPhysicalHeight: Float { estimatedScaleFactor * Float(referenceImage.physicalSize.height) }
 }
 
+extension ObjectAnchor: @retroactive Hashable {}
+extension ObjectAnchor: ObjectAnchorRepresentable {
+    public var referenceObjectName: String {
+        referenceObject.name
+    }
+}
+
 extension PlaneAnchor: @retroactive Hashable {}
 extension PlaneAnchor: PlaneAnchorRepresentable {}
 
@@ -71,6 +78,7 @@ public typealias HandAnchor = CapturedHandAnchor
 public typealias MeshAnchor = CapturedMeshAnchor
 public typealias WorldAnchor = CapturedWorldAnchor
 public typealias ImageAnchor = CapturedImageAnchor
+public typealias ObjectAnchor = CapturedObjectAnchor
 public typealias PlaneAnchor = CapturedPlaneAnchor
 public typealias HandSkeleton = CapturedHandSkeleton
 public typealias RoomAnchor = CapturedRoomAnchor

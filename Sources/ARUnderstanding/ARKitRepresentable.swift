@@ -14,5 +14,6 @@ protocol ARKitRepresentable {
     func sceneReconstructionProvider(_:ARKit.SceneReconstructionProvider) -> SceneReconstructionProviderRepresentable
     func planeDetectionProvider(_:ARKit.PlaneDetectionProvider) -> PlaneDetectionProviderRepresentable
     func imageDetectionProvider(_:ARKit.ImageTrackingProvider) -> ImageTrackingProviderRepresentable
+    func objectTrackingProvider(_:ARKit.ObjectTrackingProvider) -> ObjectTrackingProviderRepresentable
 }
 #endif

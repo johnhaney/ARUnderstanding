@@ -58,5 +58,9 @@ extension AnchorPlayback: ARKitRepresentable {
     func imageDetectionProvider(_: ImageTrackingProvider) -> any ImageTrackingProviderRepresentable {
         AnchorPlayback.ImageTrackingPlaybackProvider(playback: self)
     }
+    
+    func objectTrackingProvider(_: ObjectTrackingProvider) -> any ObjectTrackingProviderRepresentable {
+        AnchorPlayback.ObjectTrackingPlaybackProvider(playback: self)
+    }
 }
 #endif

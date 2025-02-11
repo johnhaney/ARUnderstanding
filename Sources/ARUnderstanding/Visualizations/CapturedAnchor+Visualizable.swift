@@ -34,6 +34,8 @@ extension CapturedAnchor: Visualizable {
             capturedPlaneAnchor.visualize(with: materials)
         case .image(let capturedImageAnchor):
             capturedImageAnchor.visualize(with: materials)
+        case .object(let capturedObjectAnchor):
+            capturedObjectAnchor.visualize(with: materials)
         case .world(let capturedWorldAnchor):
             capturedWorldAnchor.visualize(with: materials)
         case .device(let capturedDeviceAnchor):
@@ -53,6 +55,8 @@ extension CapturedAnchor: Visualizable {
             capturedPlaneAnchor.update(visualization: visualization, with: materials)
         case .image(let capturedImageAnchor):
             capturedImageAnchor.update(visualization: visualization, with: materials)
+        case .object(let capturedObjectAnchor):
+            capturedObjectAnchor.update(visualization: visualization, with: materials)
         case .world(let capturedWorldAnchor):
             capturedWorldAnchor.update(visualization: visualization, with: materials)
         case .device(let capturedDeviceAnchor):
@@ -72,6 +76,8 @@ extension CapturedAnchor: Visualizable {
             return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.66, saturation: 1, brightness: 1, alpha: 0.2), isMetallic: false)
         case .image:
             return SimpleMaterial(color: .green, isMetallic: false)
+        case .object:
+            return SimpleMaterial(color: .orange, isMetallic: false)
         case .world:
             return SimpleMaterial(color: .cyan, isMetallic: false)
         case .device:

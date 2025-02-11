@@ -67,6 +67,20 @@ public struct ReferenceImage {
     static func loadReferenceImages(inGroupNamed: String) -> [ReferenceImage] { [] }
 }
 
+final public class ObjectTrackingProvider: DataProvider, ObjectTrackingProviderRepresentable, Sendable {
+    public static var requiredAuthorizations: [ARKitSession.AuthorizationType] { [] }
+    public static var isSupported: Bool { true }
+    public var description: String { "ObjectTrackingProvider mock" }
+    public var isSupported: Bool { true }
+    public init(referenceObjects: [ReferenceObject]) {}
+    public var state: DataProviderState { .running }
+    public var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedObjectAnchor>> {
+        AsyncStream { nil }
+    }
+}
+
+public struct ReferenceObject: Equatable {}
+
 final public class PlaneDetectionProvider: DataProvider,  PlaneDetectionProviderRepresentable, Sendable {
     public static var requiredAuthorizations: [ARKitSession.AuthorizationType] { [] }
     public static var isSupported: Bool { true }

@@ -31,6 +31,9 @@ extension CapturedAnchor: Codable {
         case .image(let capturedAnchorUpdate):
             try container.encode("image", forKey: .type)
             try container.encode(capturedAnchorUpdate, forKey: .update)
+        case .object(let capturedAnchorUpdate):
+            try container.encode("object", forKey: .type)
+            try container.encode(capturedAnchorUpdate, forKey: .update)
         case .world(let capturedAnchorUpdate):
             try container.encode("world", forKey: .type)
             try container.encode(capturedAnchorUpdate, forKey: .update)
