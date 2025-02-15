@@ -100,7 +100,6 @@ extension PlaneAnchor.Classification: Codable {
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unknown classification type")
         }
     }
-
 }
 
 extension PlaneAnchor.Alignment: Codable {

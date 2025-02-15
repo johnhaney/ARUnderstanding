@@ -16,6 +16,16 @@ protocol Visualizable {
 }
 
 extension CapturedAnchor: Visualizable {
+    @MainActor public func visualize(in baseEntity: Entity) {
+        if let existing = baseEntity.findEntity(named: id.uuidString) {
+            update(visualization: existing)
+        } else {
+            let visualization = self.visualization
+            visualization.name = id.uuidString
+            baseEntity.addChild(visualization)
+        }
+    }
+    
     @MainActor public var visualization: Entity {
         visualize(with: [defaultMaterial])
     }

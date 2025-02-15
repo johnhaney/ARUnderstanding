@@ -23,8 +23,6 @@ public protocol RoomAnchorRepresentable: CapturableAnchor {
     func geometries(of classification: MeshAnchor.MeshClassification) -> [Geometry]
     func contains(_ point: SIMD3<Float>) -> Bool
     var classifiedGeometries: ClassifiedGeometry { get }
-//    var capturedClassifiedGeometries: [MeshAnchor.MeshClassification: [CapturedMeshAnchor.Geometry]] { get }
-//    var capturedGeometry: CapturedRoomAnchor.CapturedGeometry { get }
 }
 
 extension RoomAnchorGeometryRepresentable {
@@ -199,7 +197,7 @@ extension RoomAnchor {
 public struct RoomAnchorGeometryContainer: RoomAnchorGeometryRepresentable {
     let room: RoomAnchor
     public var classifiedGeometries: [MeshAnchor.MeshClassification: [MeshAnchor.Geometry]] {
-        Dictionary(uniqueKeysWithValues: MeshAnchor.MeshClassification.allCases.map {
+        Dictionary(uniqueKeysWithValues: [MeshAnchor.MeshClassification.wall, MeshAnchor.MeshClassification.floor].map {
             ($0, room.geometries(of: $0))
         })
     }
