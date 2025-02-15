@@ -191,7 +191,7 @@ public class ARUnderstanding {
         try? await runSession()
         
         for updates in providers.map(\.anchorUpdates) {
-            Task.detached {
+            Task {
                 for await update in updates {
                     continuation.yield(update)
                 }
