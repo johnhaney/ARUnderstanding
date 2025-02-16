@@ -81,9 +81,9 @@ extension CapturedAnchor: Visualizable {
         case .hand:
             return SimpleMaterial(color: .purple, isMetallic: false)
         case .mesh:
-            return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.2, saturation: 1, brightness: 1, alpha: 0.2), isMetallic: false)
+            return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.0, saturation: 0.0, brightness: 0.5, alpha: 0.4), isMetallic: false)
         case .plane:
-            return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.66, saturation: 1, brightness: 1, alpha: 0.2), isMetallic: false)
+            return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.5, saturation: 0.2, brightness: 0.5, alpha: 0.6), isMetallic: false)
         case .image:
             return SimpleMaterial(color: .green, isMetallic: false)
         case .object:
@@ -91,9 +91,9 @@ extension CapturedAnchor: Visualizable {
         case .world:
             return SimpleMaterial(color: .cyan, isMetallic: false)
         case .device:
-            return SimpleMaterial(color: .magenta, isMetallic: false)
+            return SimpleMaterial(color: .purple, isMetallic: false)
         case .room:
-            return SimpleMaterial(color: .yellow, isMetallic: false)
+            return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.5, saturation: 0.2, brightness: 0.5, alpha: 0.6), isMetallic: false)
         }
     }
 }

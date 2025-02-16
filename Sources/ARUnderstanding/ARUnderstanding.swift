@@ -430,3 +430,17 @@ extension ARProvider {
         }
     }
 }
+
+extension ARUnderstanding: ARUnderstandingInput {
+    @MainActor public var sessionUpdates: AsyncStream<ARUnderstandingSession.Message> {
+        AsyncStream { continuation in
+            Task {
+                defer { continuation.finish() }
+                continuation.yield(ARUnderstandingSession.Message.newSession)
+                for await update in self.anchorUpdates {
+                    continuation.yield(ARUnderstandingSession.Message.anchor(update))
+                }
+            }
+        }
+    }
+}

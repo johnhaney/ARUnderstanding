@@ -8,6 +8,7 @@
 import Foundation
 import UniformTypeIdentifiers
 import ARUnderstanding
+import JSONLStream
 import OSLog
 
 let logger = Logger(subsystem: "com.appsyoucanmake.AnchorRecorder", category: "general")
@@ -23,39 +24,44 @@ public struct AnchorRecording: Sendable {
 }
 
 public actor AnchorRecorder {
-    public let outputName: String
-    public private(set) var records: [CapturedAnchor] = []
+    private let prefix: String
+    public private(set) var outputName: String
+    private var writer: JSONLWriter?
     
-    public var recording: AnchorRecording {
-        AnchorRecording(records: records)
-    }
-    
-    public func save() async throws {
-        do {
-            let fileURL = try Self.fileURL(outputName: outputName)
-            let recordsToSave = records
-            let data = try JSONEncoder().encode(recordsToSave)
-            try data.write(to: fileURL)
-            logger.trace("Saved \(self.records.count) records to \(fileURL)")
-        } catch {
-            logger.error("Error saving \(self.records.count) records to \(self.outputName).anchorsession: \(error.localizedDescription)")
-            throw error
+    public func recording() async throws -> AnchorRecording {
+        let fileURL = try Self.fileURL(outputName: outputName)
+        guard let reader = JSONLReader(fileURL: fileURL)
+        else {
+            logger.error("Error providing recording")
+            throw NSError(domain: "com.appsyoucanmake.AnchorRecorder", code: 1, userInfo: nil)
         }
-        return
+        let records: [CapturedAnchor] = await reader.allObjects()
+        return AnchorRecording(records: records)
     }
     
     public init(outputName: String? = nil) {
+        let prefix: String = outputName ?? "ARSession"
+        self.prefix = prefix
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd-HH-mm-ss"
-        self.outputName = "\(outputName ?? "ARSession")-\(formatter.string(from: Date()))"
+        self.outputName = "\(prefix)-\(formatter.string(from: Date()))"
+        self.writer = nil
+        if let fileURL = try? Self.fileURL(outputName: self.outputName) {
+            self.writer = JSONLWriter(fileURL: fileURL, appendIfExists: true)
+        }
+    }
+    
+    private func startNewSession() async {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd-HH-mm-ss"
+        self.outputName = "\(prefix)-\(formatter.string(from: Date()))"
+        if let fileURL = try? Self.fileURL(outputName: self.outputName) {
+            self.writer = JSONLWriter(fileURL: fileURL, appendIfExists: true)
+        }
     }
     
     public func record(anchor: CapturedAnchor) async {
-        records.append(anchor)
-        if self.records.count % 200 == 0 {
-            logger.trace("\(self.records.count) records in memory")
-            try? await save()
-        }
+        try? await writer?.write(jsonObject: anchor)
     }
     
     public static func fileURL(outputName: String) throws -> URL {
@@ -65,56 +71,41 @@ public actor AnchorRecorder {
     }
 }
 
+extension AnchorRecorder: ARUnderstandingOutput {
+    public func handleNewSession() async {
+        await startNewSession()
+    }
+    public func handleAnchor(_ anchor: CapturedAnchor) async {
+        await self.record(anchor: anchor)
+    }
+}
+
 #if os(visionOS)
 import ARKit
 
 extension AnchorRecorder {
     public func record(anchor: AnchorUpdate<HandAnchor>) async {
-        records.append(.hand(anchor.captured))
-        if self.records.count % 200 == 0 {
-            logger.trace("\(self.records.count) records in memory")
-            try? await save()
-        }
+        await record(anchor: .hand(anchor.captured))
     }
     
     public func record(anchor: AnchorUpdate<WorldAnchor>) async {
-        records.append(.world(anchor.captured))
-        if self.records.count % 200 == 0 {
-            logger.trace("\(self.records.count) records in memory")
-            try? await save()
-        }
+        await record(anchor: .world(anchor.captured))
     }
     
     public func record(anchor: AnchorUpdate<MeshAnchor>) async {
-        records.append(.mesh(anchor.captured))
-        if self.records.count % 200 == 0 {
-            logger.trace("\(self.records.count) records in memory")
-            try? await save()
-        }
+        await record(anchor: .mesh(anchor.captured))
     }
     
     public func record(anchor: AnchorUpdate<ImageAnchor>) async {
-        records.append(.image(anchor.captured))
-        if self.records.count % 200 == 0 {
-            logger.trace("\(self.records.count) records in memory")
-            try? await save()
-        }
+        await record(anchor: .image(anchor.captured))
     }
     
     public func record(anchor: AnchorUpdate<PlaneAnchor>) async {
-        records.append(.plane(anchor.captured))
-        if self.records.count % 200 == 0 {
-            logger.trace("\(self.records.count) records in memory")
-            try? await save()
-        }
+        await record(anchor: .plane(anchor.captured))
     }
     
     public func record(anchor: AnchorUpdate<DeviceAnchor>) async {
-        records.append(.device(anchor.captured))
-        if self.records.count % 200 == 0 {
-            logger.trace("\(self.records.count) records in memory")
-            try? await save()
-        }
+        await record(anchor: .device(anchor.captured))
     }
 }
 #endif

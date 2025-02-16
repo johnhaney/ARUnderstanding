@@ -35,12 +35,7 @@ extension AnchorRecorder {
         static func anchorUpdates(recorder: AnchorRecorder, source: AsyncStream<CapturedAnchor>) -> AsyncStream<CapturedAnchor> {
             AsyncStream { continuation in
                 Task {
-                    defer {
-                        Task {
-                            try? await recorder.save()
-                            continuation.finish()
-                        }
-                    }
+                    defer { continuation.finish() }
                     for await update in source {
                         continuation.yield(update)
                         Task {
@@ -58,12 +53,7 @@ extension AsyncStream where Element == CapturedAnchor {
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
             Task {
-                defer {
-                    Task {
-                        try? await recorder.save()
-                        continuation.finish()
-                    }
-                }
+                defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
@@ -80,12 +70,7 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedHandAnchor> 
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
             Task {
-                defer {
-                    Task {
-                        try? await recorder.save()
-                        continuation.finish()
-                    }
-                }
+                defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
@@ -102,12 +87,7 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedPlaneAnchor>
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
             Task {
-                defer {
-                    Task {
-                        try? await recorder.save()
-                        continuation.finish()
-                    }
-                }
+                defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
@@ -124,12 +104,7 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedMeshAnchor> 
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
             Task {
-                defer {
-                    Task {
-                        try? await recorder.save()
-                        continuation.finish()
-                    }
-                }
+                defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
@@ -146,12 +121,7 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedImageAnchor>
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
             Task {
-                defer {
-                    Task {
-                        try? await recorder.save()
-                        continuation.finish()
-                    }
-                }
+                defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
@@ -168,12 +138,7 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedDeviceAnchor
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
             Task {
-                defer {
-                    Task {
-                        try? await recorder.save()
-                        continuation.finish()
-                    }
-                }
+                defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
@@ -190,12 +155,7 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedWorldAnchor>
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
             Task {
-                defer {
-                    Task {
-                        try? await recorder.save()
-                        continuation.finish()
-                    }
-                }
+                defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {

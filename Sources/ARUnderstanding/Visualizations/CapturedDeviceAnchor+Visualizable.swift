@@ -24,7 +24,7 @@ extension CapturedDeviceAnchor: Visualizable {
     }
     
     @MainActor private func visualizationModel(materials: [Material]) -> Entity {
-        let mesh = MeshResource.generateSphere(radius: 0.005)
+        let mesh = MeshResource.generateBox(width: 0.0875, height: 0.2, depth: 0.0875, cornerRadius: 0.02)
         let model = ModelEntity(mesh: mesh, materials: materials)
         return model
     }
