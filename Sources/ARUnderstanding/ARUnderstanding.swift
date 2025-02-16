@@ -5,8 +5,9 @@
 //  Created by John Haney on 3/31/24.
 //
 
-#if os(visionOS)
+#if canImport(ARKit)
 import ARKit
+#endif
 import RealityKit
 import OSLog
 
@@ -163,6 +164,22 @@ public class ARUnderstanding {
         }
     }
 
+//    public static func objectUpdates(referenceObjects: [ReferenceObject]) -> AsyncStream<CapturedAnchorUpdate<CapturedImageAnchor>> {
+//        AsyncStream { continuation in
+//            Task {
+//                for await anchor in ARUnderstanding(providers: [.object(referenceObjects: referenceObjects)]).anchorUpdates {
+//                    switch anchor {
+//                    case .object(let objectAnchor):
+//                        continuation.yield(objectAnchor)
+//                    default:
+//                        break
+//                    }
+//                }
+//                continuation.finish()
+//            }
+//        }
+//    }
+
     fileprivate func build(_ continuation: AsyncStream<CapturedAnchor>.Continuation) async {
         guard !providers.isEmpty,
               dataProvidersAreSupported,
@@ -174,7 +191,7 @@ public class ARUnderstanding {
         try? await runSession()
         
         for updates in providers.map(\.anchorUpdates) {
-            Task.detached {
+            Task {
                 for await update in updates {
                     continuation.yield(update)
                 }
@@ -185,6 +202,7 @@ public class ARUnderstanding {
     }
     
     private func monitorSessionEvents() async {
+#if os(visionOS)
         for await event in session.events {
             switch event {
             case .authorizationChanged(type: _, status: let status):
@@ -204,6 +222,7 @@ public class ARUnderstanding {
                 fatalError("Unhandled new event type \(event)")
             }
         }
+#endif
     }
 }
 
@@ -222,6 +241,10 @@ extension ARProvider {
             return true
         case (.world, .world):
             return true
+        case (.room, .room):
+            return true
+        case (.object, .object):
+            return true
         case (.hands, _):
             return false
         case (.meshes, _):
@@ -232,6 +255,10 @@ extension ARProvider {
             return false
         case (.world, _):
             return false
+        case (.room, _):
+            return false
+        case (.object, _):
+            return false
         }
     }
     
@@ -241,12 +268,16 @@ extension ARProvider {
             return handAnchorStream(provider)
         case .image(let provider):
             return imageAnchorStream(provider)
+        case .object(let provider):
+            return objectAnchorStream(provider)
         case .meshes(let provider):
             return meshAnchorStream(provider)
         case .planes(let provider):
             return planeAnchorStream(provider)
         case .world(let provider, let queryDevice):
             return worldAnchorStream(provider, queryDevice: queryDevice)
+        case .room(let provider):
+            return roomAnchorStream(provider)
         }
     }
 
@@ -260,8 +291,12 @@ extension ARProvider {
             return planeDetectionProvider.state == .initialized
         case .image(let imageTrackingProvider):
             return imageTrackingProvider.state == .initialized
+        case .object(let objectTrackingProvider):
+            return objectTrackingProvider.state == .initialized
         case .world(let worldTrackingProvider, _):
             return worldTrackingProvider.state == .initialized
+        case .room(let roomTrackingProvider):
+            return roomTrackingProvider.state == .initialized
         }
     }
     
@@ -275,8 +310,12 @@ extension ARProvider {
             return PlaneDetectionProvider.isSupported
         case .image(_):
             return ImageTrackingProvider.isSupported
+        case .object(_):
+            return ObjectTrackingProvider.isSupported
         case .world(_, _):
             return WorldTrackingProvider.isSupported
+        case .room(_):
+            return RoomTrackingProvider.isSupported
         }
     }
     
@@ -290,8 +329,12 @@ extension ARProvider {
             return planeDetectionProvider
         case .image(let imageTrackingProvider):
             return imageTrackingProvider
+        case .object(let objectTrackingProvider):
+            return objectTrackingProvider
         case .world(let worldTrackingProvider, _):
             return worldTrackingProvider
+        case .room(let roomTrackingProvider):
+            return roomTrackingProvider
         }
     }
 }
@@ -312,6 +355,16 @@ extension ARProvider {
             Task {
                 for await update in provider.anchorUpdates {
                     continuation.yield(.image(update.captured))
+                }
+            }
+        }
+    }
+    
+    func objectAnchorStream(_ provider: ObjectTrackingProvider) -> AsyncStream<CapturedAnchor> {
+        AsyncStream { continuation in
+            Task {
+                for await update in provider.anchorUpdates {
+//                    continuation.yield(.object(update.captured))
                 }
             }
         }
@@ -366,5 +419,28 @@ extension ARProvider {
             }
         }
     }
+    
+    func roomAnchorStream(_ provider: RoomTrackingProvider) -> AsyncStream<CapturedAnchor> {
+        AsyncStream { continuation in
+            Task {
+                for await update in provider.anchorUpdates {
+                    continuation.yield(.room(update.captured))
+                }
+            }
+        }
+    }
 }
-#endif
+
+extension ARUnderstanding: ARUnderstandingInput {
+    @MainActor public var sessionUpdates: AsyncStream<ARUnderstandingSession.Message> {
+        AsyncStream { continuation in
+            Task {
+                defer { continuation.finish() }
+                continuation.yield(ARUnderstandingSession.Message.newSession)
+                for await update in self.anchorUpdates {
+                    continuation.yield(ARUnderstandingSession.Message.anchor(update))
+                }
+            }
+        }
+    }
+}

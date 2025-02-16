@@ -7,13 +7,17 @@
 
 #if os(visionOS)
 import ARKit
+#endif
+import Foundation
+import RealityKit
 
-@MainActor
 public enum ARProvider {
     case hands(HandTrackingProvider)
     case meshes(SceneReconstructionProvider)
     case planes(PlaneDetectionProvider)
     case image(ImageTrackingProvider)
+    case object(ObjectTrackingProvider)
+    case room(RoomTrackingProvider)
     case world(WorldTrackingProvider, QueryDeviceAnchor)
 }
 
@@ -25,7 +29,10 @@ public enum ARProviderDefinition: Equatable {
     case planes
     case verticalPlanes
     case horizontalPlanes
+    case slantedPlanes
+    case room
     case image(resourceGroupName: String)
+    case object(referenceObjects: [ReferenceObject])
     case world
 }
 
@@ -46,16 +53,21 @@ extension ARProviderDefinition {
         case .unclassifiedMeshes:
             .meshes(SceneReconstructionProvider())
         case .planes:
-            .planes(PlaneDetectionProvider(alignments: [.horizontal, .vertical]))
+                .planes(PlaneDetectionProvider(alignments: [.horizontal, .vertical, .slanted]))
         case .verticalPlanes:
             .planes(PlaneDetectionProvider(alignments: [.vertical]))
         case .horizontalPlanes:
             .planes(PlaneDetectionProvider(alignments: [.horizontal]))
+        case .slantedPlanes:
+            .planes(PlaneDetectionProvider(alignments: [.slanted]))
         case .image(let resourceGroupName):
             .image(ImageTrackingProvider(referenceImages: ReferenceImage.loadReferenceImages(inGroupNamed: resourceGroupName)))
+        case .object(let referenceObjects):
+                .object(ObjectTrackingProvider(referenceObjects: referenceObjects))
         case .world:
             .world(WorldTrackingProvider(), .none)
+        case .room:
+            .room(RoomTrackingProvider())
         }
     }
 }
-#endif

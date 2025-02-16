@@ -1,8 +1,8 @@
 //
-//  CapturedPlaneAnchor+Visualizable.swift
+//  CapturedRoomAnchor+Visualizable.swift
+//  ARUnderstanding
 //
-//
-//  Created by John Haney on 4/14/24.
+//  Created by John Haney on 2/9/25.
 //
 
 #if canImport(ARKit)
@@ -10,7 +10,7 @@ import ARKit
 #endif
 import RealityKit
 
-extension CapturedPlaneAnchor: Visualizable {
+extension CapturedRoomAnchor: Visualizable {
     @MainActor public func visualize(with materials: [Material]) -> Entity {
         let entity = Entity()
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
@@ -19,7 +19,7 @@ extension CapturedPlaneAnchor: Visualizable {
                 entity.addChild(model)
             }
         }
-
+        
         return entity
     }
     
@@ -29,7 +29,7 @@ extension CapturedPlaneAnchor: Visualizable {
         let model = ModelEntity(mesh: mesh, materials: materials)
         return model
     }
-    
+
     @MainActor public func update(visualization entity: Entity, with materials: () -> [Material]) {
         let transform = Transform(matrix: self.originFromAnchorTransform)
         entity.transform = transform
@@ -51,7 +51,7 @@ extension CapturedPlaneAnchor: Visualizable {
     }
 }
 
-extension PlaneAnchorRepresentable {
+extension RoomAnchorRepresentable {
     func mesh(name: String) async -> MeshResource? {
         await geometry.mesh.mesh(name: name)
     }

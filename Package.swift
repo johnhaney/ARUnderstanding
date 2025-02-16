@@ -7,12 +7,17 @@ let package = Package(
     name: "ARUnderstanding",
     platforms: [
         .visionOS(.v2),
+        .iOS(.v18),
+        .macOS(.v15),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
         .library(
             name: "ARUnderstanding",
             targets: ["ARUnderstanding"]),
+    ],
+    dependencies: [
+        .package(url: "https://github.com/johnhaney/JSONLStream", branch: "main"),
     ],
     targets: [
         // Targets are the basic building blocks of a package, defining a module or a test suite.

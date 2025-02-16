@@ -5,8 +5,11 @@
 //  Created by John Haney on 4/13/24.
 //
 
-#if os(visionOS)
+#if canImport(ARKit)
 import ARKit
+#endif
+import Foundation
+import RealityKit
 
 public protocol WorldAnchorRepresentable: CapturableAnchor {
     var originFromAnchorTransform: simd_float4x4 { get }
@@ -24,25 +27,23 @@ extension WorldAnchorRepresentable {
     }
 }
 
-extension WorldAnchor: @retroactive Hashable {}
-extension WorldAnchor: WorldAnchorRepresentable {}
-
 public struct CapturedWorldAnchor: TrackableAnchor, WorldAnchorRepresentable, Sendable {
     public var id: UUID
     public var originFromAnchorTransform: simd_float4x4
     public var isTracked: Bool
     public var description: String { "World \(originFromAnchorTransform)" }
+    public var timestamp: TimeInterval
 
-    public init(id: UUID, originFromAnchorTransform: simd_float4x4, isTracked: Bool) {
+    public init(id: UUID, originFromAnchorTransform: simd_float4x4, isTracked: Bool, timestamp: TimeInterval) {
         self.id = id
         self.originFromAnchorTransform = originFromAnchorTransform
         self.isTracked = isTracked
+        self.timestamp = timestamp
     }
 }
 
 extension WorldAnchorRepresentable {
     public var captured: CapturedWorldAnchor {
-        CapturedWorldAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, isTracked: isTracked)
+        CapturedWorldAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, isTracked: isTracked, timestamp: timestamp)
     }
 }
-#endif

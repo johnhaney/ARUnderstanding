@@ -5,8 +5,10 @@
 //  Created by John Haney on 4/7/24.
 //
 
-#if os(visionOS)
+import Foundation
+#if canImport(ARKit)
 import ARKit
+#endif
 import RealityKit
 
 public protocol CapturableAnchor: Anchor, Hashable {
@@ -21,9 +23,11 @@ public enum CapturedAnchor: Sendable, Hashable {
     case image(CapturedAnchorUpdate<CapturedImageAnchor>)
     case world(CapturedAnchorUpdate<CapturedWorldAnchor>)
     case device(CapturedAnchorUpdate<CapturedDeviceAnchor>)
+    case room(CapturedAnchorUpdate<CapturedRoomAnchor>)
+    case object(CapturedAnchorUpdate<CapturedObjectAnchor>)
 }
 
-public struct CapturedAnchorUpdate<AnchorType: Hashable>: Sendable, Hashable where AnchorType: Anchor {
+public struct CapturedAnchorUpdate<AnchorType: Hashable & Identifiable>: Sendable, Hashable where AnchorType: Anchor {
     public let anchor: AnchorType
     public let timestamp: TimeInterval
     public let event: CapturedAnchorEvent
@@ -52,9 +56,13 @@ extension CapturedAnchor {
             capturedAnchorUpdate.anchor.id
         case .image(let capturedAnchorUpdate):
             capturedAnchorUpdate.anchor.id
+        case .object(let capturedAnchorUpdate):
+            capturedAnchorUpdate.anchor.id
         case .world(let capturedAnchorUpdate):
             capturedAnchorUpdate.anchor.id
         case .device(let capturedAnchorUpdate):
+            capturedAnchorUpdate.anchor.id
+        case .room(let capturedAnchorUpdate):
             capturedAnchorUpdate.anchor.id
         }
     }
@@ -69,9 +77,13 @@ extension CapturedAnchor {
             capturedAnchorUpdate.timestamp
         case .image(let capturedAnchorUpdate):
             capturedAnchorUpdate.timestamp
+        case .object(let capturedAnchorUpdate):
+            capturedAnchorUpdate.timestamp
         case .world(let capturedAnchorUpdate):
             capturedAnchorUpdate.timestamp
         case .device(let capturedAnchorUpdate):
+            capturedAnchorUpdate.timestamp
+        case .room(let capturedAnchorUpdate):
             capturedAnchorUpdate.timestamp
         }
     }
@@ -86,9 +98,13 @@ extension CapturedAnchor {
             capturedAnchorUpdate.event
         case .image(let capturedAnchorUpdate):
             capturedAnchorUpdate.event
+        case .object(let capturedAnchorUpdate):
+            capturedAnchorUpdate.event
         case .world(let capturedAnchorUpdate):
             capturedAnchorUpdate.event
         case .device(let capturedAnchorUpdate):
+            capturedAnchorUpdate.event
+        case .room(let capturedAnchorUpdate):
             capturedAnchorUpdate.event
         }
     }
@@ -108,24 +124,23 @@ extension CapturableAnchor {
     }
 }
 
-extension AnchorUpdate where AnchorType: CapturableAnchor {
-    var captured: CapturedAnchorUpdate<AnchorType.CapturedType> {
-        let capturedAnchor: AnchorType.CapturedType = anchor.captured
-        
-        return CapturedAnchorUpdate<AnchorType.CapturedType>(anchor: capturedAnchor, timestamp: self.timestamp, event: self.event.captured)
-    }
-}
-
-extension AnchorUpdate.Event where AnchorType: CapturableAnchor {
-    var captured: CapturedAnchorEvent {
-        switch self {
-        case .added:
-            .added
-        case .updated:
-            .updated
-        case .removed:
-            .removed
-        }
-    }
-}
-#endif
+//extension AnchorUpdate where AnchorType: CapturableAnchor {
+//    var captured: CapturedAnchorUpdate<AnchorType.CapturedType> {
+//        let capturedAnchor: AnchorType.CapturedType = anchor.captured
+//        
+//        return CapturedAnchorUpdate<AnchorType.CapturedType>(anchor: capturedAnchor, timestamp: self.timestamp, event: self.event.captured)
+//    }
+//}
+//
+//extension AnchorUpdate.Event where AnchorType: CapturableAnchor {
+//    var captured: CapturedAnchorEvent {
+//        switch self {
+//        case .added:
+//            .added
+//        case .updated:
+//            .updated
+//        case .removed:
+//            .removed
+//        }
+//    }
+//}

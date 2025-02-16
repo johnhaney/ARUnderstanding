@@ -5,8 +5,12 @@
 //  Created by John Haney on 4/14/24.
 //
 
-#if os(visionOS)
+#if canImport(ARKit)
 import ARKit
+#else
+import Foundation
+import RealityKit
+#endif
 
 public protocol DeviceAnchorRepresentable: CapturableAnchor, Hashable {
     var originFromAnchorTransform: simd_float4x4 { get }
@@ -30,18 +34,20 @@ public struct CapturedDeviceAnchor: DeviceAnchorRepresentable, TrackableAnchor, 
     public var id: UUID
     public var originFromAnchorTransform: simd_float4x4
     public var isTracked: Bool
+    public var timestamp: TimeInterval
     public var description: String { "Device \(originFromAnchorTransform)" }
     
-    public init(id: UUID, originFromAnchorTransform: simd_float4x4, isTracked: Bool) {
+    public init(id: UUID, originFromAnchorTransform: simd_float4x4, isTracked: Bool, timestamp: TimeInterval) {
         self.id = id
         self.originFromAnchorTransform = originFromAnchorTransform
         self.isTracked = isTracked
+        self.timestamp = timestamp
     }
 }
 
 extension DeviceAnchorRepresentable {
     public var captured: CapturedDeviceAnchor {
-        CapturedDeviceAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, isTracked: isTracked)
+        CapturedDeviceAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, isTracked: isTracked, timestamp: timestamp)
     }
 }
 
@@ -53,4 +59,3 @@ extension simd_float4x4: @retroactive Hashable {
         hasher.combine(columns.3)
     }
 }
-#endif

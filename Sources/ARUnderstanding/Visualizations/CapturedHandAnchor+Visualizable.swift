@@ -5,8 +5,9 @@
 //  Created by John Haney on 4/14/24.
 //
 
-#if os(visionOS)
+#if canImport(ARKit)
 import ARKit
+#endif
 import RealityKit
 
 extension CapturedHandAnchor: Visualizable {
@@ -78,66 +79,66 @@ extension CapturedHandAnchor: Visualizable {
 }
 
 extension HandSkeleton.JointName {
-    init(rawValue: String) throws {
-        switch rawValue {
-        case "wrist":
-            self = .wrist
-        case "thumbKnuckle":
-            self = .thumbKnuckle
-        case "thumbIntermediateBase":
-            self = .thumbIntermediateBase
-        case "thumbIntermediateTip":
-            self = .thumbIntermediateTip
-        case "thumbTip":
-            self = .thumbTip
-        case "indexFingerMetacarpal":
-            self = .indexFingerMetacarpal
-        case "indexFingerKnuckle":
-            self = .indexFingerKnuckle
-        case "indexFingerIntermediateBase":
-            self = .indexFingerIntermediateBase
-        case "indexFingerIntermediateTip":
-            self = .indexFingerIntermediateTip
-        case "indexFingerTip":
-            self = .indexFingerTip
-        case "middleFingerMetacarpal":
-            self = .middleFingerMetacarpal
-        case "middleFingerKnuckle":
-            self = .middleFingerKnuckle
-        case "middleFingerIntermediateBase":
-            self = .middleFingerIntermediateBase
-        case "middleFingerIntermediateTip":
-            self = .middleFingerIntermediateTip
-        case "middleFingerTip":
-            self = .middleFingerTip
-        case "ringFingerMetacarpal":
-            self = .ringFingerMetacarpal
-        case "ringFingerKnuckle":
-            self = .ringFingerKnuckle
-        case "ringFingerIntermediateBase":
-            self = .ringFingerIntermediateBase
-        case "ringFingerIntermediateTip":
-            self = .ringFingerIntermediateTip
-        case "ringFingerTip":
-            self = .ringFingerTip
-        case "littleFingerMetacarpal":
-            self = .littleFingerMetacarpal
-        case "littleFingerKnuckle":
-            self = .littleFingerKnuckle
-        case "littleFingerIntermediateBase":
-            self = .littleFingerIntermediateBase
-        case "littleFingerIntermediateTip":
-            self = .littleFingerIntermediateTip
-        case "littleFingerTip":
-            self = .littleFingerTip
-        case "forearmWrist":
-            self = .forearmWrist
-        case "forearmArm":
-            self = .forearmArm
-        default:
-            throw Error.decodingError
-        }
-    }
+//    init(rawValue: String) throws {
+//        switch rawValue {
+//        case "wrist":
+//            self = .wrist
+//        case "thumbKnuckle":
+//            self = .thumbKnuckle
+//        case "thumbIntermediateBase":
+//            self = .thumbIntermediateBase
+//        case "thumbIntermediateTip":
+//            self = .thumbIntermediateTip
+//        case "thumbTip":
+//            self = .thumbTip
+//        case "indexFingerMetacarpal":
+//            self = .indexFingerMetacarpal
+//        case "indexFingerKnuckle":
+//            self = .indexFingerKnuckle
+//        case "indexFingerIntermediateBase":
+//            self = .indexFingerIntermediateBase
+//        case "indexFingerIntermediateTip":
+//            self = .indexFingerIntermediateTip
+//        case "indexFingerTip":
+//            self = .indexFingerTip
+//        case "middleFingerMetacarpal":
+//            self = .middleFingerMetacarpal
+//        case "middleFingerKnuckle":
+//            self = .middleFingerKnuckle
+//        case "middleFingerIntermediateBase":
+//            self = .middleFingerIntermediateBase
+//        case "middleFingerIntermediateTip":
+//            self = .middleFingerIntermediateTip
+//        case "middleFingerTip":
+//            self = .middleFingerTip
+//        case "ringFingerMetacarpal":
+//            self = .ringFingerMetacarpal
+//        case "ringFingerKnuckle":
+//            self = .ringFingerKnuckle
+//        case "ringFingerIntermediateBase":
+//            self = .ringFingerIntermediateBase
+//        case "ringFingerIntermediateTip":
+//            self = .ringFingerIntermediateTip
+//        case "ringFingerTip":
+//            self = .ringFingerTip
+//        case "littleFingerMetacarpal":
+//            self = .littleFingerMetacarpal
+//        case "littleFingerKnuckle":
+//            self = .littleFingerKnuckle
+//        case "littleFingerIntermediateBase":
+//            self = .littleFingerIntermediateBase
+//        case "littleFingerIntermediateTip":
+//            self = .littleFingerIntermediateTip
+//        case "littleFingerTip":
+//            self = .littleFingerTip
+//        case "forearmWrist":
+//            self = .forearmWrist
+//        case "forearmArm":
+//            self = .forearmArm
+//        default:
+//            throw Error.decodingError
+//        }
+//    }
     
     public var rawValue: String { description }
     
@@ -145,4 +146,3 @@ extension HandSkeleton.JointName {
         case decodingError
     }
 }
-#endif

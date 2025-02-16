@@ -5,8 +5,9 @@
 //  Created by John Haney on 4/14/24.
 //
 
-#if os(visionOS)
+#if canImport(ARKit)
 import ARKit
+#endif
 import RealityKit
 
 protocol Visualizable {
@@ -15,6 +16,16 @@ protocol Visualizable {
 }
 
 extension CapturedAnchor: Visualizable {
+    @MainActor public func visualize(in baseEntity: Entity) {
+        if let existing = baseEntity.findEntity(named: id.uuidString) {
+            update(visualization: existing)
+        } else {
+            let visualization = self.visualization
+            visualization.name = id.uuidString
+            baseEntity.addChild(visualization)
+        }
+    }
+    
     @MainActor public var visualization: Entity {
         visualize(with: [defaultMaterial])
     }
@@ -33,10 +44,14 @@ extension CapturedAnchor: Visualizable {
             capturedPlaneAnchor.visualize(with: materials)
         case .image(let capturedImageAnchor):
             capturedImageAnchor.visualize(with: materials)
+        case .object(let capturedObjectAnchor):
+            capturedObjectAnchor.visualize(with: materials)
         case .world(let capturedWorldAnchor):
             capturedWorldAnchor.visualize(with: materials)
         case .device(let capturedDeviceAnchor):
             capturedDeviceAnchor.visualize(with: materials)
+        case .room(let capturedRoomAnchor):
+            capturedRoomAnchor.visualize(with: materials)
         }
     }
     
@@ -50,10 +65,14 @@ extension CapturedAnchor: Visualizable {
             capturedPlaneAnchor.update(visualization: visualization, with: materials)
         case .image(let capturedImageAnchor):
             capturedImageAnchor.update(visualization: visualization, with: materials)
+        case .object(let capturedObjectAnchor):
+            capturedObjectAnchor.update(visualization: visualization, with: materials)
         case .world(let capturedWorldAnchor):
             capturedWorldAnchor.update(visualization: visualization, with: materials)
         case .device(let capturedDeviceAnchor):
             capturedDeviceAnchor.update(visualization: visualization, with: materials)
+        case .room(let capturedRoomAnchor):
+            capturedRoomAnchor.update(visualization: visualization, with: materials)
         }
     }
     
@@ -62,15 +81,19 @@ extension CapturedAnchor: Visualizable {
         case .hand:
             return SimpleMaterial(color: .purple, isMetallic: false)
         case .mesh:
-            return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.2, saturation: 1, brightness: 1, alpha: 0.2), isMetallic: false)
+            return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.0, saturation: 0.0, brightness: 0.5, alpha: 0.4), isMetallic: false)
         case .plane:
-            return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.66, saturation: 1, brightness: 1, alpha: 0.2), isMetallic: false)
+            return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.5, saturation: 0.2, brightness: 0.5, alpha: 0.6), isMetallic: false)
         case .image:
             return SimpleMaterial(color: .green, isMetallic: false)
+        case .object:
+            return SimpleMaterial(color: .orange, isMetallic: false)
         case .world:
             return SimpleMaterial(color: .cyan, isMetallic: false)
         case .device:
-            return SimpleMaterial(color: .magenta, isMetallic: false)
+            return SimpleMaterial(color: .purple, isMetallic: false)
+        case .room:
+            return SimpleMaterial(color: SimpleMaterial.Color(hue: 0.5, saturation: 0.2, brightness: 0.5, alpha: 0.6), isMetallic: false)
         }
     }
 }
@@ -84,4 +107,3 @@ extension CapturedAnchorUpdate: Visualizable where AnchorType: Visualizable {
         anchor.update(visualization: visualization, with: materials)
     }
 }
-#endif
