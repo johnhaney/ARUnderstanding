@@ -13,10 +13,10 @@ import RealityKit
 #endif
 
 public protocol HandAnchorRepresentable: CapturableAnchor, Hashable {
-    associatedtype HandSkeleton: HandSkeletonRepresentable
+    associatedtype HandSkeletonType: HandSkeletonRepresentable
     var id: UUID { get }
     var chirality: HandAnchor.Chirality { get }
-    var handSkeleton: HandSkeleton? { get }
+    var handSkeleton: HandSkeletonType? { get }
     var isTracked: Bool { get }
     var originFromAnchorTransform: simd_float4x4 { get }
 }
