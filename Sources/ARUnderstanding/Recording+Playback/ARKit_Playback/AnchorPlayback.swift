@@ -7,7 +7,7 @@
 
 import Foundation
 
-final public class AnchorPlayback: ARUnderstandingProvider, Sendable {
+final public class AnchorPlayback: ARUnderstandingProvider, ARUnderstandingInput, Sendable {
     public let recording: AnchorRecording
     
     init(recording: AnchorRecording) {
@@ -49,31 +49,28 @@ final public class AnchorPlayback: ARUnderstandingProvider, Sendable {
         }
     }
     
-//    public func compactMap<T>(_ action: @escaping (CapturedAnchor) -> T?) -> AsyncStream<T> {
-//        AsyncStream { continuation in
-//            Task { @MainActor in
-//                repeat {
-//                    let events = self.recording.records
-//                    let start = Date()
-//                    var firstTimestamp: TimeInterval?
-//                    for event in events {
-//                        let offset = event.timestamp - (firstTimestamp ?? event.timestamp)
-//                        firstTimestamp = firstTimestamp ?? event.timestamp
-//                        while offset > Date().timeIntervalSince(start) {
-//                            try? await Task.sleep(for: .seconds(offset - Date().timeIntervalSince(start)))
-//                        }
-//                        if let value = action(event) {
-//                            continuation.yield(value)
-//                        }
-//                    }
-//                    if loop {
-//                        try? await Task.sleep(for: .seconds(1))
-//                    }
-//                } while loop == true
-//                continuation.finish()
-//            }
-//        }
-//    }
+    public var sessionUpdates: AsyncStream<ARUnderstandingSession.Message> {
+        AsyncStream { continuation in
+            let events = recording.records
+            Task {
+                repeat {
+                    continuation.yield(ARUnderstandingSession.Message.newSession)
+                    let start = Date()
+                    var firstTimestamp: TimeInterval?
+                    for event in events {
+                        let offset = event.timestamp - (firstTimestamp ?? event.timestamp)
+                        firstTimestamp = firstTimestamp ?? event.timestamp
+                        while offset > Date().timeIntervalSince(start) {
+                            try? await Task.sleep(for: .seconds(offset - Date().timeIntervalSince(start)))
+                        }
+                        continuation.yield(ARUnderstandingSession.Message.anchor(event))
+                    }
+                    try? await Task.sleep(for: .seconds(1))
+                } while true
+                continuation.finish()
+            }
+        }
+    }
     
     public var anchorUpdates: AsyncStream<CapturedAnchor> {
         AsyncStream { continuation in

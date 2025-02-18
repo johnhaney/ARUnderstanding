@@ -78,11 +78,14 @@ public class ARUnderstandingSession {
             for await update in input.sessionUpdates {
                 switch update {
                 case .newSession:
-                    self.handleNewSession()
+                    Task {
+                        self.handleNewSession()
+                    }
                 case .anchor(let capturedAnchor):
-                    self.handleAnchor(capturedAnchor)
+                    Task {
+                        self.handleAnchor(capturedAnchor)
+                    }
                 }
-                await Task.yield()
             }
         }
     }

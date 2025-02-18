@@ -11,6 +11,10 @@ import ARKit
 import RealityKit
 
 extension CapturedHandAnchor: Visualizable {
+    struct CapturedHandComponent: Component {
+        let entities: [JointName: Entity]
+    }
+    
     @MainActor public func visualize(with materials: [Material]) -> Entity {
         let entity = Entity()
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
@@ -45,36 +49,26 @@ extension CapturedHandAnchor: Visualizable {
     @MainActor public func update(visualization entity: Entity, with materials: @autoclosure () -> [Material]) {
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         
-        let existingJoints = Set(entity.children.map(\.name))
-        let currentJoints = Set(handSkeleton?.allJoints.map(\.name.description) ?? [])
-        let remove = existingJoints.subtracting(currentJoints)
-        let update = currentJoints.intersection(existingJoints)
-        let add = currentJoints.subtracting(existingJoints)
-
-        for jointName in remove {
-            entity.findEntity(named: jointName)?.removeFromParent()
+        guard let handSkeleton else { return }
+        
+        var jointEntities: [JointName: Entity] = entity.components[CapturedHandComponent.self]?.entities ?? [:]
+        
+        var generatedMaterials: [Material] = []
+        
+        for joint in handSkeleton.allJoints {
+            if let existing = jointEntities[joint.name] {
+                existing.transform = Transform(matrix: joint.anchorFromJointTransform)
+            } else {
+                generatedMaterials = generatedMaterials.isEmpty ? materials() : generatedMaterials
+                let newEntity = Entity()
+                let ball = createJointVisualization(joint: joint, materials: generatedMaterials)
+                entity.addChild(ball)
+                newEntity.transform = Transform(matrix: joint.anchorFromJointTransform)
+                jointEntities[joint.name] = ball
+            }
         }
         
-        guard let handSkeleton else {
-            return
-        }
-        
-        for jointName in update {
-            guard let joint = try? JointName(rawValue: jointName) else { continue }
-            
-            entity.findEntity(named: jointName)?.transform = Transform(matrix: handSkeleton.joint(joint).anchorFromJointTransform)
-        }
-        
-        guard !add.isEmpty else { return }
-        let materials = materials()
-        
-        for jointName in add {
-            guard let name = try? JointName(rawValue: jointName) else { continue }
-            let joint = handSkeleton.joint(name)
-            
-            let ball = createJointVisualization(joint: joint, materials: materials)
-            entity.addChild(ball)
-        }
+        entity.components.set(CapturedHandComponent(entities: jointEntities))
     }
 }
 
