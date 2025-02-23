@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import ARUnderstanding
 
 public protocol ARUnderstandingProvider {
     var anchorUpdates: AsyncStream<CapturedAnchor> { get }
@@ -17,7 +16,7 @@ extension ARUnderstandingProvider {
     public var handUpdates: AsyncStream<CapturedAnchorUpdate<CapturedHandAnchor>> {
         AsyncStream { continuation in
             let anchorUpdates = self.anchorUpdates
-            Task {
+            let task = Task {
                 defer {
                     continuation.finish()
                 }
@@ -26,6 +25,9 @@ extension ARUnderstandingProvider {
                         continuation.yield(handAnchor)
                     }
                 }
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
             }
         }
     }

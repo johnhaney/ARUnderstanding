@@ -1,6 +1,8 @@
 //
-//  NonARKit.swift
+//  ARUnderstandng+ARKit.swift
 //  ARUnderstanding
+//
+//  provides definitions mirroring those available on visionOS for other platforms
 //
 //  Created by John Haney on 1/28/25.
 //
@@ -159,7 +161,7 @@ public struct ARKitSession: Sendable {
         
     }
     
-    func run(_ providers: [DataProvider]) {}
+    func run(_ providers: [DataProvider]) async throws {}
     var events: Events { Events() }
     
     public struct Events {

@@ -8,7 +8,6 @@
 #if canImport(ARKit)
 import ARKit
 #endif
-import ARUnderstanding
 
 public protocol ObjectTrackingProviderRepresentable {
     var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedObjectAnchor>> { get }
@@ -20,7 +19,7 @@ extension AnchorPlayback {
         var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedObjectAnchor>> {
             AsyncStream { continuation in
                 let anchorUpdates = playback.anchorUpdates
-                Task {
+                let task = Task {
                     defer {
                         continuation.finish()
                     }
@@ -29,6 +28,9 @@ extension AnchorPlayback {
                             continuation.yield(update)
                         }
                     }
+                }
+                continuation.onTermination = { @Sendable _ in
+                    task.cancel()
                 }
             }
         }

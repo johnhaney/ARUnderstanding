@@ -5,6 +5,7 @@
 //  Created by John Haney on 4/14/24.
 //
 
+import Foundation
 #if canImport(ARKit)
 import ARKit
 #endif
@@ -16,12 +17,18 @@ protocol Visualizable {
 }
 
 extension CapturedAnchor: Visualizable {
+    struct CapturedAnchorVisualizedComponent: Component {
+        let anchor: CapturedAnchor
+        let entity: Entity
+    }
+    
     @MainActor public func visualize(in baseEntity: Entity) {
-        if let existing = baseEntity.findEntity(named: id.uuidString) {
-            update(visualization: existing)
+        if baseEntity.name == self.id.uuidString,
+           let visualization = baseEntity.children.first {
+            update(visualization: visualization)
         } else {
+            baseEntity.name = self.id.uuidString
             let visualization = self.visualization
-            visualization.name = id.uuidString
             baseEntity.addChild(visualization)
         }
     }

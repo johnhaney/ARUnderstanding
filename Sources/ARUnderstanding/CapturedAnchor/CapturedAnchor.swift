@@ -16,7 +16,7 @@ public protocol CapturableAnchor: Anchor, Hashable {
     var captured: CapturedType { get }
 }
 
-public enum CapturedAnchor: Sendable, Hashable {
+public enum CapturedAnchor: Sendable, Hashable, Equatable {
     case hand(CapturedAnchorUpdate<CapturedHandAnchor>)
     case mesh(CapturedAnchorUpdate<CapturedMeshAnchor>)
     case plane(CapturedAnchorUpdate<CapturedPlaneAnchor>)
@@ -27,7 +27,13 @@ public enum CapturedAnchor: Sendable, Hashable {
     case object(CapturedAnchorUpdate<CapturedObjectAnchor>)
 }
 
-public struct CapturedAnchorUpdate<AnchorType: Hashable & Identifiable>: Sendable, Hashable where AnchorType: Anchor {
+protocol CapturedAnchorUpdateRepresentable {
+    var timestamp: TimeInterval { get }
+    var event: CapturedAnchorEvent { get }
+
+}
+
+public struct CapturedAnchorUpdate<AnchorType: Anchor & Hashable & Identifiable>: CapturedAnchorUpdateRepresentable, Sendable, Hashable, Equatable where AnchorType: Anchor {
     public let anchor: AnchorType
     public let timestamp: TimeInterval
     public let event: CapturedAnchorEvent
@@ -39,75 +45,61 @@ public struct CapturedAnchorUpdate<AnchorType: Hashable & Identifiable>: Sendabl
     }
 }
 
-public enum CapturedAnchorEvent: String, Codable, Sendable, Hashable {
+public enum CapturedAnchorEvent: String, Sendable, Hashable {
     case added
     case updated
     case removed
+    
+    var code: UInt8 {
+        switch self {
+        case .added: 1
+        case .updated: 2
+        case .removed: 3
+        }
+    }
+    
+    init?(code: UInt8) {
+        switch code {
+        case 1: self = .added
+        case 2: self = .updated
+        case 3: self = .removed
+        default: return nil
+        }
+    }
 }
 
 extension CapturedAnchor {
-    public var id: UUID {
+    private var anchor: any Anchor {
         switch self {
-        case .hand(let capturedAnchorUpdate):
-            capturedAnchorUpdate.anchor.id
-        case .mesh(let capturedAnchorUpdate):
-            capturedAnchorUpdate.anchor.id
-        case .plane(let capturedAnchorUpdate):
-            capturedAnchorUpdate.anchor.id
-        case .image(let capturedAnchorUpdate):
-            capturedAnchorUpdate.anchor.id
-        case .object(let capturedAnchorUpdate):
-            capturedAnchorUpdate.anchor.id
-        case .world(let capturedAnchorUpdate):
-            capturedAnchorUpdate.anchor.id
-        case .device(let capturedAnchorUpdate):
-            capturedAnchorUpdate.anchor.id
-        case .room(let capturedAnchorUpdate):
-            capturedAnchorUpdate.anchor.id
+        case .hand(let update): update.anchor
+        case .mesh(let update): update.anchor
+        case .plane(let update): update.anchor
+        case .image(let update): update.anchor
+        case .world(let update): update.anchor
+        case .device(let update): update.anchor
+        case .room(let update): update.anchor
+        case .object(let update): update.anchor
         }
     }
     
-    public var timestamp: TimeInterval {
+    private var update: any CapturedAnchorUpdateRepresentable {
         switch self {
-        case .hand(let capturedAnchorUpdate):
-            capturedAnchorUpdate.timestamp
-        case .mesh(let capturedAnchorUpdate):
-            capturedAnchorUpdate.timestamp
-        case .plane(let capturedAnchorUpdate):
-            capturedAnchorUpdate.timestamp
-        case .image(let capturedAnchorUpdate):
-            capturedAnchorUpdate.timestamp
-        case .object(let capturedAnchorUpdate):
-            capturedAnchorUpdate.timestamp
-        case .world(let capturedAnchorUpdate):
-            capturedAnchorUpdate.timestamp
-        case .device(let capturedAnchorUpdate):
-            capturedAnchorUpdate.timestamp
-        case .room(let capturedAnchorUpdate):
-            capturedAnchorUpdate.timestamp
+        case .hand(let update): update
+        case .mesh(let update): update
+        case .plane(let update): update
+        case .image(let update): update
+        case .world(let update): update
+        case .device(let update): update
+        case .room(let update): update
+        case .object(let update): update
         }
     }
     
-    public var event: CapturedAnchorEvent {
-        switch self {
-        case .hand(let capturedAnchorUpdate):
-            capturedAnchorUpdate.event
-        case .mesh(let capturedAnchorUpdate):
-            capturedAnchorUpdate.event
-        case .plane(let capturedAnchorUpdate):
-            capturedAnchorUpdate.event
-        case .image(let capturedAnchorUpdate):
-            capturedAnchorUpdate.event
-        case .object(let capturedAnchorUpdate):
-            capturedAnchorUpdate.event
-        case .world(let capturedAnchorUpdate):
-            capturedAnchorUpdate.event
-        case .device(let capturedAnchorUpdate):
-            capturedAnchorUpdate.event
-        case .room(let capturedAnchorUpdate):
-            capturedAnchorUpdate.event
-        }
-    }
+    public var id: UUID { anchor.id }
+    
+    public var timestamp: TimeInterval { update.timestamp }
+    
+    public var event: CapturedAnchorEvent { update.event }
 }
 
 extension CapturableAnchor {
@@ -123,24 +115,3 @@ extension CapturableAnchor {
         CapturedAnchorUpdate(anchor: self, timestamp: timestamp, event: .removed)
     }
 }
-
-//extension AnchorUpdate where AnchorType: CapturableAnchor {
-//    var captured: CapturedAnchorUpdate<AnchorType.CapturedType> {
-//        let capturedAnchor: AnchorType.CapturedType = anchor.captured
-//        
-//        return CapturedAnchorUpdate<AnchorType.CapturedType>(anchor: capturedAnchor, timestamp: self.timestamp, event: self.event.captured)
-//    }
-//}
-//
-//extension AnchorUpdate.Event where AnchorType: CapturableAnchor {
-//    var captured: CapturedAnchorEvent {
-//        switch self {
-//        case .added:
-//            .added
-//        case .updated:
-//            .updated
-//        case .removed:
-//            .removed
-//        }
-//    }
-//}

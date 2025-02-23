@@ -123,7 +123,7 @@ extension CapturedMeshGeometry: MeshAnchorGeometryRepresentable {
     }
 }
 
-public struct CapturedRoomGeometry: Codable, Sendable {
+public struct CapturedRoomGeometry: Sendable {
     let classifiedGeometries: [MeshAnchor.MeshClassification: [CapturedMeshAnchor.Geometry]]
     
     init<T: MeshAnchorGeometryRepresentable>(classifiedGeometries: [MeshAnchor.MeshClassification: [T]]) {
@@ -137,9 +137,11 @@ public struct CapturedRoomGeometry: Codable, Sendable {
     #endif
 }
 
-extension MeshAnchor.MeshClassification: Codable, @unchecked Sendable {
+#if !os(visionOS)
+extension MeshAnchor.MeshClassification: @unchecked Sendable {
     
 }
+#endif
 
 extension RoomAnchorRepresentable {
     public var captured: CapturedRoomAnchor {

@@ -37,7 +37,7 @@ public typealias JointName = ARKit.HandSkeleton.JointName
 public typealias JointName = HandSkeleton.JointName
 #endif
 
-public struct CapturedHandAnchor: CapturableAnchor, HandAnchorRepresentable, Sendable {
+public struct CapturedHandAnchor: CapturableAnchor, HandAnchorRepresentable, Sendable, Equatable {
     public func joint(named jointName: JointName) -> CapturedHandSkeleton.Joint {
         handSkeleton?.allJoints.first(where: { $0.name == jointName }) ?? CapturedHandSkeleton.Joint(name: jointName, anchorFromJointTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1)), isTracked: false, parentFromJointTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1)), parentJointName: nil)
     }
@@ -66,7 +66,7 @@ extension CapturedHandAnchor {
     }
 }
 
-public struct CapturedHandSkeleton: HandSkeletonRepresentable, Sendable {
+public struct CapturedHandSkeleton: HandSkeletonRepresentable, Sendable, Equatable {
     public func joint(_ named: HandSkeleton.JointName) -> CapturedHandSkeleton.Joint {
         allJoints.first(where: { $0.name == named }) ?? Joint(name: named, anchorFromJointTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1)), isTracked: false, parentFromJointTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1)), parentJointName: nil)
     }
@@ -77,7 +77,7 @@ public struct CapturedHandSkeleton: HandSkeletonRepresentable, Sendable {
         self.allJoints = allJoints.map({ $0.with(parentFrom: jointByName) })
     }
     
-    public struct Joint: HandSkeletonJointRepresentable, Sendable {
+    public struct Joint: HandSkeletonJointRepresentable, Sendable, Equatable {
         public let name: HandSkeleton.JointName
         public let anchorFromJointTransform: simd_float4x4
         public let isTracked: Bool
@@ -105,7 +105,7 @@ public struct CapturedHandSkeleton: HandSkeletonRepresentable, Sendable {
         
         func with(parentFrom from: [HandSkeleton.JointName: [Joint]]) -> Self {
             guard let parentJointName,
-                  let jointName = try? HandSkeleton.JointName(rawValue: parentJointName),
+                  let jointName = HandSkeleton.JointName(rawValue: parentJointName),
                   let joint = from[jointName]?.first
             else { return self }
             
@@ -119,10 +119,10 @@ public struct CapturedHandSkeleton: HandSkeletonRepresentable, Sendable {
     }
     
     public static var neutralPose: CapturedHandSkeleton {
-        if HandSkeleton.self != CapturedHandSkeleton.self {
-            HandSkeleton.neutralPose.captured
-        } else {
+        if HandSkeleton.self == CapturedHandSkeleton.self {
             CapturedHandSkeleton(allJoints: [])
+        } else {
+            HandSkeleton.neutralPose.captured
         }
     }
 }

@@ -33,13 +33,16 @@ extension AnchorRecorder {
             AsyncStream { continuation in
                 let originalAnchorUpdates = originalAnchorUpdates
                 let recorder = recorder
-                Task {
+                let task = Task {
                     defer { continuation.finish() }
                     for await update in originalAnchorUpdates {
                         let captured = update.captured
                         await recorder.record(anchor: update)
                         continuation.yield(captured)
                     }
+                }
+                continuation.onTermination = { @Sendable _ in
+                    task.cancel()
                 }
             }
         }
@@ -56,13 +59,16 @@ extension AnchorRecorder {
         
         var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedWorldAnchor>> {
             AsyncStream { continuation in
-                Task {
+                let task = Task {
                     defer { continuation.finish() }
                     for await update in worldTrackingProvider.anchorUpdates {
                         let captured = update.captured
                         await recorder.record(anchor: update)
                         continuation.yield(captured)
                     }
+                }
+                continuation.onTermination = { @Sendable _ in
+                    task.cancel()
                 }
             }
         }

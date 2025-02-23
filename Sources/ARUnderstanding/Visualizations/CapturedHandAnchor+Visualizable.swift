@@ -21,14 +21,17 @@ extension CapturedHandAnchor: Visualizable {
         guard let handSkeleton else { return entity }
         
         let model = visualizationModel(materials: materials)
-        
+        var jointEntities: [JointName: Entity] = entity.components[CapturedHandComponent.self]?.entities ?? [:]
+
         for joint in handSkeleton.allJoints {
             let ball = model.clone(recursive: false)
             ball.name = joint.name.description
             ball.transform = Transform(matrix: joint.anchorFromJointTransform)
             entity.addChild(ball)
+            jointEntities[joint.name] = ball
         }
         
+        entity.components.set(CapturedHandComponent(entities: jointEntities))
         return entity
     }
     
@@ -38,33 +41,17 @@ extension CapturedHandAnchor: Visualizable {
         return model
     }
     
-    @MainActor private func createJointVisualization<Joint: HandSkeletonJointRepresentable>(joint: Joint, materials: [Material]) -> Entity {
-        let ball = visualizationModel(materials: materials)
-        
-        ball.name = joint.name.description
-        ball.transform = Transform(matrix: joint.anchorFromJointTransform)
-        return ball
-    }
-    
     @MainActor public func update(visualization entity: Entity, with materials: @autoclosure () -> [Material]) {
+        guard let jointEntities = entity.components[CapturedHandComponent.self]?.entities
+        else { return }
+        
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         
         guard let handSkeleton else { return }
         
-        var jointEntities: [JointName: Entity] = entity.components[CapturedHandComponent.self]?.entities ?? [:]
-        
-        var generatedMaterials: [Material] = []
-        
         for joint in handSkeleton.allJoints {
             if let existing = jointEntities[joint.name] {
                 existing.transform = Transform(matrix: joint.anchorFromJointTransform)
-            } else {
-                generatedMaterials = generatedMaterials.isEmpty ? materials() : generatedMaterials
-                let newEntity = Entity()
-                let ball = createJointVisualization(joint: joint, materials: generatedMaterials)
-                entity.addChild(ball)
-                newEntity.transform = Transform(matrix: joint.anchorFromJointTransform)
-                jointEntities[joint.name] = ball
             }
         }
         

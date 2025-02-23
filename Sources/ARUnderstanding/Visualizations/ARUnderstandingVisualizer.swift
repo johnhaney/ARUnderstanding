@@ -6,19 +6,42 @@
 //
 
 import Foundation
+import SwiftUI
 import RealityKit
 
+@Observable
 public class ARUnderstandingVisualizer: ARUnderstandingOutput {
+    private var rootEntity: Entity
     private var baseEntity: Entity
-    public init(entity: Entity) {
-        self.baseEntity = entity
+    private var entities: [UUID: Entity] = [:]
+    @MainActor public init(entity: Entity) {
+        self.rootEntity = entity
+        self.baseEntity = Entity()
+        entity.addChild(baseEntity)
+    }
+    
+    @MainActor public func setEntity(_ entity: Entity) {
+        self.rootEntity = entity
+        entity.addChild(baseEntity)
+    }
+    
+    public func findEntity(for anchor: CapturedAnchor) -> Entity? {
+        entities[anchor.id]
     }
     
     public func handleNewSession() async {
+        entities.removeAll()
         await baseEntity.removeAllChildren()
     }
     
-    public func handleAnchor(_ anchor: CapturedAnchor) async {
-        await anchor.visualize(in: baseEntity)
+    @MainActor public func handleAnchor(_ anchor: CapturedAnchor) {
+        if let existing = entities[anchor.id] {
+            anchor.visualize(in: existing)
+        } else {
+            let entity = Entity()
+            entities[anchor.id] = entity
+            anchor.visualize(in: entity)
+            baseEntity.addChild(entity)
+        }
     }
 }

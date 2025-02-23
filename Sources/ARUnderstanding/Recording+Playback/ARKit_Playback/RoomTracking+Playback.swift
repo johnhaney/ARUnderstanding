@@ -20,7 +20,7 @@ extension AnchorPlayback {
         var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedRoomAnchor>> {
             AsyncStream { continuation in
                 let anchorUpdates = playback.anchorUpdates
-                Task {
+                let task = Task {
                     defer {
                         continuation.finish()
                     }
@@ -29,6 +29,9 @@ extension AnchorPlayback {
                             continuation.yield(update)
                         }
                     }
+                }
+                continuation.onTermination = { @Sendable _ in
+                    task.cancel()
                 }
             }
         }

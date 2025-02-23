@@ -15,16 +15,12 @@ extension CapturedDeviceAnchor: Visualizable {
         let entity = Entity()
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         let model = visualizationModel(materials: materials)
-        model.transform = Transform(translation: SIMD3<Float>(x: 0, y: 0, z: -0.5))
         entity.addChild(model)
-        let model2 = model.clone(recursive: true)
-        model2.transform = Transform(scale: SIMD3<Float>(repeating: 30))
-        entity.addChild(model2)
         return entity
     }
     
     @MainActor private func visualizationModel(materials: [Material]) -> Entity {
-        let mesh = MeshResource.generateBox(width: 0.0875, height: 0.2, depth: 0.0875, cornerRadius: 0.02)
+        let mesh = MeshResource.generateBox(width: 0.14, height: 0.22, depth: 0.14, cornerRadius: 0.02)
         let model = ModelEntity(mesh: mesh, materials: materials)
         return model
     }

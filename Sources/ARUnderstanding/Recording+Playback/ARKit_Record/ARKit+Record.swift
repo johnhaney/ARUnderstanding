@@ -28,7 +28,7 @@ extension AnchorUpdateSequence<WorldAnchor> {
 
 extension SceneReconstructionProvider {
     public func record(outputName: String? = nil) async -> SceneReconstructionProviderRepresentable {
-        await AnchorRecorder(outputName: outputName).sceneReconstructionProvider(self)
+        AnchorRecorder(outputName: outputName).sceneReconstructionProvider(self)
     }
 }
 
@@ -40,7 +40,7 @@ extension AnchorUpdateSequence<MeshAnchor> {
 
 extension ImageTrackingProvider {
     public func record(outputName: String? = nil) async -> ImageTrackingProviderRepresentable {
-        await AnchorRecorder(outputName: outputName).imageTrackingProvider(self)
+        AnchorRecorder(outputName: outputName).imageTrackingProvider(self)
     }
 }
 

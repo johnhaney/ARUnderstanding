@@ -9,7 +9,6 @@
 #if canImport(ARKit)
 import ARKit
 #endif
-import ARUnderstanding
 
 public protocol ImageTrackingProviderRepresentable {
     var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedImageAnchor>> { get }
@@ -21,7 +20,7 @@ extension AnchorPlayback {
         var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedImageAnchor>> {
             AsyncStream { continuation in
                 let anchorUpdates = playback.anchorUpdates
-                Task {
+                let task = Task {
                     defer {
                         continuation.finish()
                     }
@@ -30,6 +29,9 @@ extension AnchorPlayback {
                             continuation.yield(update)
                         }
                     }
+                }
+                continuation.onTermination = { @Sendable _ in
+                    task.cancel()
                 }
             }
         }

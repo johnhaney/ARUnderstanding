@@ -110,9 +110,14 @@ public protocol PlaneAnchorGeometryRepresentable {
     var captured: CapturedPlaneAnchor.Geometry { get }
 }
 
-public struct CapturedPlaneMeshGeometry: Codable, Sendable {
+public struct CapturedPlaneMeshGeometry: Sendable {
     var vertices: [SIMD3<Float>]
     var triangles: [[UInt32]]
+    
+    init(vertices: [SIMD3<Float>], triangles: [[UInt32]]) {
+        self.vertices = vertices
+        self.triangles = triangles
+    }
     
     init(_ geometry: PlaneAnchor.Geometry) {
         #if !os(visionOS)

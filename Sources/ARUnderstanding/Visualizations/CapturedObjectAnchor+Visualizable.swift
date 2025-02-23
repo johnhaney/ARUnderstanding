@@ -25,13 +25,10 @@ extension CapturedObjectAnchor: Visualizable {
     @MainActor private func visualizationModel(materials: [Material]) -> Entity {
         let mesh = MeshResource.generatePlane(width: 1, height: 1)
         let model = ModelEntity(mesh: mesh, materials: materials)
-        model.name = "Object"
         return model
     }
     
     public func update(visualization entity: Entity, with materials: () -> [Material]) {
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
-        guard let model = entity.findEntity(named: "Object") ?? entity.children.first
-        else { return }
     }
 }

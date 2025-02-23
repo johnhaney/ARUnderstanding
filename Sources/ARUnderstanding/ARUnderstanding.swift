@@ -62,15 +62,18 @@ public class ARUnderstanding {
     
     public var anchorUpdates: AsyncStream<CapturedAnchor> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 await self.build(continuation)
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
             }
         }
     }
     
     public static var handUpdates: AsyncStream<CapturedAnchorUpdate<CapturedHandAnchor>> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await anchor in ARUnderstanding(providers: [.hands]).anchorUpdates {
                     switch anchor {
                     case .hand(let handAnchor):
@@ -81,12 +84,15 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
         }
     }
 
     public static var planeUpdates: AsyncStream<CapturedAnchorUpdate<CapturedPlaneAnchor>> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await anchor in ARUnderstanding(providers: [.planes]).anchorUpdates {
                     switch anchor {
                     case .plane(let planeAnchor):
@@ -97,12 +103,15 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
         }
     }
 
     public static var meshUpdates: AsyncStream<CapturedAnchorUpdate<CapturedMeshAnchor>> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await anchor in ARUnderstanding(providers: [.meshes]).anchorUpdates {
                     switch anchor {
                     case .mesh(let meshAnchor):
@@ -113,12 +122,15 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
         }
     }
 
     public static var deviceUpdates: AsyncStream<CapturedAnchorUpdate<CapturedDeviceAnchor>> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await anchor in ARUnderstanding(providers: [.device]).anchorUpdates {
                     switch anchor {
                     case .device(let deviceAnchor):
@@ -129,12 +141,15 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
         }
     }
 
     public static var worldUpdates: AsyncStream<CapturedAnchorUpdate<CapturedWorldAnchor>> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await anchor in ARUnderstanding(providers: [.world]).anchorUpdates {
                     switch anchor {
                     case .world(let worldAnchor):
@@ -145,12 +160,33 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
+        }
+    }
+    
+    public static var roomUpdates: AsyncStream<CapturedAnchorUpdate<CapturedRoomAnchor>> {
+        AsyncStream { continuation in
+            let task = Task {
+                for await anchor in ARUnderstanding(providers: [.room]).anchorUpdates {
+                    switch anchor {
+                    case .room(let roomAnchor):
+                        continuation.yield(roomAnchor)
+                    default:
+                        break
+                    }
+                }
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
         }
     }
 
     public static func imageUpdates(resourceGroupName groupName: String) -> AsyncStream<CapturedAnchorUpdate<CapturedImageAnchor>> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await anchor in ARUnderstanding(providers: [.image(resourceGroupName: groupName)]).anchorUpdates {
                     switch anchor {
                     case .image(let imageAnchor):
@@ -161,24 +197,30 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
         }
     }
 
-//    public static func objectUpdates(referenceObjects: [ReferenceObject]) -> AsyncStream<CapturedAnchorUpdate<CapturedImageAnchor>> {
-//        AsyncStream { continuation in
-//            Task {
-//                for await anchor in ARUnderstanding(providers: [.object(referenceObjects: referenceObjects)]).anchorUpdates {
-//                    switch anchor {
-//                    case .object(let objectAnchor):
-//                        continuation.yield(objectAnchor)
-//                    default:
-//                        break
-//                    }
-//                }
-//                continuation.finish()
-//            }
-//        }
-//    }
+    public static func objectUpdates(referenceObjects: [ReferenceObject]) -> AsyncStream<CapturedAnchorUpdate<CapturedObjectAnchor>> {
+        AsyncStream { continuation in
+            let task = Task {
+                for await anchor in ARUnderstanding(providers: [.object(referenceObjects: referenceObjects)]).anchorUpdates {
+                    switch anchor {
+                    case .object(let objectAnchor):
+                        continuation.yield(objectAnchor)
+                    default:
+                        break
+                    }
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+            }
+        }
+    }
 
     fileprivate func build(_ continuation: AsyncStream<CapturedAnchor>.Continuation) async {
         guard !providers.isEmpty,
@@ -188,17 +230,25 @@ public class ARUnderstanding {
             return continuation.finish()
         }
         
-        try? await runSession()
-        
-        for updates in providers.map(\.anchorUpdates) {
-            Task {
-                for await update in updates {
-                    continuation.yield(update)
+        do {
+            try await runSession()
+            
+            for updates in providers.map(\.anchorUpdates) {
+                let task = Task {
+                    for await update in updates {
+                        continuation.yield(update)
+                    }
+                }
+                continuation.onTermination = { @Sendable _ in
+                    task.cancel()
                 }
             }
+            
+            await monitorSessionEvents()
+        } catch {
+            logger.error("Error running session: \(error.localizedDescription)")
+            continuation.finish()
         }
-        
-        await monitorSessionEvents()
     }
     
     private func monitorSessionEvents() async {
@@ -342,64 +392,80 @@ extension ARProvider {
 extension ARProvider {
     func handAnchorStream(_ provider: HandTrackingProvider) -> AsyncStream<CapturedAnchor> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await update in provider.anchorUpdates {
                     continuation.yield(.hand(update.captured))
                 }
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
             }
         }
     }
     
     func imageAnchorStream(_ provider: ImageTrackingProvider) -> AsyncStream<CapturedAnchor> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await update in provider.anchorUpdates {
                     continuation.yield(.image(update.captured))
                 }
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
             }
         }
     }
     
     func objectAnchorStream(_ provider: ObjectTrackingProvider) -> AsyncStream<CapturedAnchor> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await update in provider.anchorUpdates {
-//                    continuation.yield(.object(update.captured))
+                    continuation.yield(.object(update.captured))
                 }
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
             }
         }
     }
     
     func meshAnchorStream(_ provider: SceneReconstructionProvider) -> AsyncStream<CapturedAnchor> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await update in provider.anchorUpdates {
                     continuation.yield(.mesh(update.captured))
                 }
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
             }
         }
     }
     
     func planeAnchorStream(_ provider: PlaneDetectionProvider) -> AsyncStream<CapturedAnchor> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await update in provider.anchorUpdates {
                     continuation.yield(.plane(update.captured))
                 }
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
             }
         }
     }
     
     func worldAnchorStream(_ provider: WorldTrackingProvider, queryDevice: QueryDeviceAnchor) -> AsyncStream<CapturedAnchor> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await update in provider.anchorUpdates {
                     continuation.yield(.world(update.captured))
                 }
             }
+            let queryTask: Task<(), Never>?
             switch queryDevice {
             case .enabled:
-                Task {
+                queryTask = Task {
                     var event = CapturedAnchorEvent.added
                     while provider.state != .stopped {
                         if provider.state == .running {
@@ -415,17 +481,24 @@ extension ARProvider {
                     }
                 }
             case .none:
-                break
+                queryTask = nil
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
+                queryTask?.cancel()
             }
         }
     }
     
     func roomAnchorStream(_ provider: RoomTrackingProvider) -> AsyncStream<CapturedAnchor> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 for await update in provider.anchorUpdates {
                     continuation.yield(.room(update.captured))
                 }
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
             }
         }
     }
@@ -434,12 +507,20 @@ extension ARProvider {
 extension ARUnderstanding: ARUnderstandingInput {
     @MainActor public var sessionUpdates: AsyncStream<ARUnderstandingSession.Message> {
         AsyncStream { continuation in
-            Task {
+            let task = Task {
                 defer { continuation.finish() }
                 continuation.yield(ARUnderstandingSession.Message.newSession)
                 for await update in self.anchorUpdates {
-                    continuation.yield(ARUnderstandingSession.Message.anchor(update))
+                    do {
+                        let anchor = try CapturedAnchorProxy(anchor: update)
+                        continuation.yield(ARUnderstandingSession.Message.anchor(anchor))
+                    } catch {
+                        
+                    }
                 }
+            }
+            continuation.onTermination = { @Sendable _ in
+                task.cancel()
             }
         }
     }

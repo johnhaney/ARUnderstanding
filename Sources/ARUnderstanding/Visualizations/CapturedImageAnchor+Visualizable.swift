@@ -26,14 +26,11 @@ extension CapturedImageAnchor: Visualizable {
     @MainActor private func visualizationModel(materials: [Material]) -> Entity {
         let mesh = MeshResource.generatePlane(width: 1, height: 1)
         let model = ModelEntity(mesh: mesh, materials: materials)
-        model.name = "Image"
         return model
     }
 
     public func update(visualization entity: Entity, with materials: () -> [Material]) {
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
-        guard let model = entity.findEntity(named: "Image") ?? entity.children.first
-        else { return }
-        model.transform.scale = SIMD3<Float>(x: estimatedPhysicalWidth, y: estimatedPhysicalHeight, z: 1)
+        entity.transform.scale = SIMD3<Float>(x: estimatedPhysicalWidth, y: estimatedPhysicalHeight, z: 1)
     }
 }

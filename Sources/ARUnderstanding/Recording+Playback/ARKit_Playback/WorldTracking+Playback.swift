@@ -22,7 +22,7 @@ extension AnchorPlayback {
         var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedWorldAnchor>> {
             AsyncStream { continuation in
                 let anchorUpdates = playback.anchorUpdates
-                Task {
+                let task = Task {
                     defer {
                         continuation.finish()
                     }
@@ -32,19 +32,13 @@ extension AnchorPlayback {
                         }
                     }
                 }
+                continuation.onTermination = { @Sendable _ in
+                    task.cancel()
+                }
             }
         }
         func queryDeviceAnchor(atTimestamp timestamp: TimeInterval) -> CapturedDeviceAnchor? {
-            playback.recording.records.lazy
-                .filter({ $0.timestamp <= timestamp })
-                .compactMap({
-                    switch $0 {
-                    case .device(let update):
-                        update.anchor
-                    case .hand, .image, .object, .mesh, .plane, .world, .room:
-                        nil
-                    }
-                }).last
+            playback.queryDeviceAnchor(atTimestamp: timestamp)
         }
     }
 }

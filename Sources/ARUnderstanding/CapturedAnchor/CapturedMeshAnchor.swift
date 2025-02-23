@@ -65,7 +65,7 @@ public struct CapturedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
         public var mesh: CapturedMeshGeometry {
             meshSource.mesh
         }
-        public var classifications: [UInt8?] {
+        public var classifications: [UInt8]? {
             meshSource.classifications
         }
         private var meshSource: CapturedMeshGeometrySource
@@ -88,19 +88,19 @@ public struct CapturedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
                 }
             }
             
-            var classifications: [UInt8?] {
+            var classifications: [UInt8]? {
                 switch self {
                 case .captured(let capturedPlaneMeshGeometry):
                     return capturedPlaneMeshGeometry.classifications
 #if os(visionOS)
                 case .mesh(let geometry):
-                    let classifications: [UInt8?]
+                    let classifications: [UInt8]?
                     if let geometryClassifications = geometry.classifications {
                         classifications = (0 ..< geometryClassifications.count).map { index in
-                            geometry.classification(at: index)
+                            geometry.classification(at: index) ?? UInt8.max
                         }
                     } else {
-                        classifications = []
+                        classifications = nil
                     }
                     return classifications
 #endif
@@ -130,33 +130,17 @@ extension ShapeResource {
     }
 }
 
-public struct CapturedMeshGeometry: Codable, Sendable {
+public struct CapturedMeshGeometry: Sendable {
     let vertices: [SIMD3<Float>]
     let normals: [SIMD3<Float>]
     let triangles: [[UInt32]]
-    let classifications: [UInt8?]
-    
-    enum CodingKeys: CodingKey {
-        case vertices
-        case normals
-        case triangles
-        case classifications
-    }
-    
-    public func encode(to encoder: any Encoder) throws {
-        var container = encoder.container(keyedBy: CodingKeys.self)
-        try container.encode(self.vertices.map({ $0.x.isNaN ? nil : $0}), forKey: .vertices)
-        try container.encode(self.normals.map({ $0.x.isNaN ? nil : $0}), forKey: .normals)
-        try container.encode(self.triangles, forKey: .triangles)
-        try container.encode(self.classifications, forKey: .classifications)
-    }
-    
-    public init(from decoder: any Decoder) throws {
-        let container = try decoder.container(keyedBy: CodingKeys.self)
-        self.vertices = (try container.decode([SIMD3<Float>?].self, forKey: .vertices)).map { $0 ?? [Float.nan, Float.nan, Float.nan] }
-        self.normals = (try container.decode([SIMD3<Float>?].self, forKey: .normals)).map { $0 ?? [Float.nan, Float.nan, Float.nan] }
-        self.triangles = try container.decode([[UInt32]].self, forKey: .triangles)
-        self.classifications = try container.decode([UInt8?].self, forKey: .classifications)
+    let classifications: [UInt8]?
+        
+    public init(vertices: [SIMD3<Float>], normals: [SIMD3<Float>], triangles: [[UInt32]], classifications: [UInt8]?) {
+        self.vertices = vertices
+        self.normals = normals
+        self.triangles = triangles
+        self.classifications = classifications
     }
     
     #if os(visionOS)
@@ -182,7 +166,7 @@ public struct CapturedMeshGeometry: Codable, Sendable {
         
         if let geometryClassifications = geometry.classifications {
             classifications = (0 ..< geometryClassifications.count).map { index in
-                geometry.classification(at: index)
+                geometry.classification(at: index) ?? UInt8.max
             }
         } else {
             classifications = []

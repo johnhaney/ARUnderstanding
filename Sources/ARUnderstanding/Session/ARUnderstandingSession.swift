@@ -20,16 +20,26 @@ public protocol ARUnderstandingOutput {
 public class ARUnderstandingSession {
     var inputs: [String: ARUnderstandingInput]
     var outputs: [String: ARUnderstandingOutput]
-    private var inputTasks: [String: Task<(), Never>] = [:]
+    private var inputTasks: [String: Task<(), Never>]
     private var isRunning = false
     
-    public enum Message: Hashable, Codable, Sendable {
+    public enum Message: Hashable, Sendable {
         case newSession
-        case anchor(CapturedAnchor)
+        case anchor(CapturedAnchorProxy)
+        case unknown
+        
+        static func anchor(_ anchor: CapturedAnchor) -> Self {
+            if let proxy = try? CapturedAnchorProxy(anchor: anchor) {
+                return .anchor(proxy)
+            } else {
+                return .unknown
+            }
+        }
     }
     
     public init() {
         inputs = [:]
+        inputTasks = [:]
         outputs = [:]
     }
     
@@ -38,25 +48,21 @@ public class ARUnderstandingSession {
         let string = UUID().uuidString
         self.inputs[string] = input
         if isRunning {
-            runInput(input)
+            runInput(input, name: string)
         }
         return string
     }
     
     @MainActor public func setInputs(_ inputs: [String: ARUnderstandingInput]) {
-        var shouldStart = false
-        if isRunning { shouldStart = true }
-
-        self.stop()
         self.inputs = inputs
         
-        if shouldStart {
+        if isRunning {
             self.start()
         }
     }
     
-    @discardableResult public func add(output: ARUnderstandingOutput, name: String? = nil) -> String {
-        let string = name ?? UUID().uuidString
+    @discardableResult public func add(output: ARUnderstandingOutput, name: String) -> String {
+        let string = name
         self.outputs[string] = output
         return string
     }
@@ -68,26 +74,31 @@ public class ARUnderstandingSession {
     
     @MainActor public func start() {
         self.stop()
-        self.inputTasks = inputs.mapValues { input in
-            runInput(input)
+        for (name, input) in inputs {
+            runInput(input, name: name)
         }
     }
     
-    @MainActor private func runInput(_ input: ARUnderstandingInput) -> Task<(), Never> {
-        Task {
+    @MainActor private func runInput(_ input: ARUnderstandingInput, name: String) {
+        let task = Task {
             for await update in input.sessionUpdates {
                 switch update {
                 case .newSession:
                     Task {
                         self.handleNewSession()
                     }
-                case .anchor(let capturedAnchor):
+                case .anchor(let proxy):
                     Task {
-                        self.handleAnchor(capturedAnchor)
+                        if let capturedAnchor = proxy.anchor {
+                            self.handleAnchor(capturedAnchor)
+                        }
                     }
+                case .unknown:
+                    break
                 }
             }
         }
+        inputTasks[name] = task
     }
     
     @MainActor private func handleNewSession() {
@@ -108,6 +119,7 @@ public class ARUnderstandingSession {
 
     public func stop() {
         let inputTasks = self.inputTasks.values
+        self.inputTasks.removeAll()
         for input in inputTasks {
             input.cancel()
         }
