@@ -14,7 +14,7 @@ import ARKit
 #endif
 
 extension CapturedDeviceAnchor: PackEncodable {
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         var output: Data = Data()
         output.append(try id.pack())
         output.append(try originFromAnchorTransform.pack())
@@ -23,10 +23,10 @@ extension CapturedDeviceAnchor: PackEncodable {
 }
 
 extension CapturedDeviceAnchor: AnchorPackDecodable {
-    static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
-        guard data.count >= 16 + 1 + 16
+    public static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
+        guard data.count >= 16 + 64
         else {
-            throw UnpackError.needsMoreData(16 + 1 + 16)
+            throw UnpackError.needsMoreData(16 + 64)
         }
         let (id, consumed) = try UUID.unpack(data: data)
         var offset = consumed

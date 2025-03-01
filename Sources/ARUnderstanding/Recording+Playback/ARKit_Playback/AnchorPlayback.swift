@@ -21,7 +21,7 @@ final public class AnchorPlayback: ARUnderstandingProvider, ARUnderstandingInput
     }
 
     public var sessionUpdates: AsyncStream<ARUnderstandingSession.Message> {
-        return AsyncStream { continuation in
+        AsyncStream { continuation in
             if let fileURL,
                let reader = BinaryReader<CapturedAnchor>(fileURL: fileURL) {
                 let task: Task<(), Never> = Task {
@@ -41,10 +41,14 @@ final public class AnchorPlayback: ARUnderstandingProvider, ARUnderstandingInput
                             }
                         }
                         try? await Task.sleep(for: .seconds(1))
-                    } while true
+                    } while !Task.isCancelled
                 }
-                continuation.onTermination = { @Sendable _ in
-                    task.cancel()
+                continuation.onTermination = { @Sendable termination in
+                    switch termination {
+                    case .cancelled:
+                        task.cancel()
+                    default: break
+                    }
                 }
             } else {
                 continuation.finish()
@@ -68,18 +72,19 @@ final public class AnchorPlayback: ARUnderstandingProvider, ARUnderstandingInput
                     for await event in reader.objects() {
                         let offset = event.timestamp - (firstTimestamp ?? event.timestamp)
                         firstTimestamp = firstTimestamp ?? event.timestamp
-                        Task {
-                            while offset > -start.timeIntervalSinceNow {
-                                try? await Task.sleep(for: .seconds(offset + start.timeIntervalSinceNow))
-                            }
-                            continuation.yield(event)
+                        while offset > -start.timeIntervalSinceNow {
+                            try? await Task.sleep(for: .seconds(offset + start.timeIntervalSinceNow))
                         }
+                        continuation.yield(event)
                     }
                     try? await Task.sleep(for: .seconds(1))
-                } while true
+                } while !Task.isCancelled
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }

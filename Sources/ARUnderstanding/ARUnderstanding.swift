@@ -65,8 +65,11 @@ public class ARUnderstanding {
             let task = Task {
                 await self.build(continuation)
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -84,8 +87,11 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -103,8 +109,11 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -122,8 +131,11 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -141,8 +153,11 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -160,8 +175,11 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -178,8 +196,11 @@ public class ARUnderstanding {
                     }
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -197,8 +218,11 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -216,8 +240,11 @@ public class ARUnderstanding {
                 }
                 continuation.finish()
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -239,8 +266,11 @@ public class ARUnderstanding {
                         continuation.yield(update)
                     }
                 }
-                continuation.onTermination = { @Sendable _ in
-                    task.cancel()
+                continuation.onTermination = { @Sendable termination in
+                    switch termination {
+                    case .cancelled: task.cancel()
+                    default: break
+                    }
                 }
             }
             
@@ -397,8 +427,11 @@ extension ARProvider {
                     continuation.yield(.hand(update.captured))
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -410,8 +443,11 @@ extension ARProvider {
                     continuation.yield(.image(update.captured))
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -423,8 +459,11 @@ extension ARProvider {
                     continuation.yield(.object(update.captured))
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -436,8 +475,11 @@ extension ARProvider {
                     continuation.yield(.mesh(update.captured))
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -449,8 +491,11 @@ extension ARProvider {
                     continuation.yield(.plane(update.captured))
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -483,9 +528,13 @@ extension ARProvider {
             case .none:
                 queryTask = nil
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
-                queryTask?.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled:
+                    task.cancel()
+                    queryTask?.cancel()
+                default: break
+                }
             }
         }
     }
@@ -497,8 +546,11 @@ extension ARProvider {
                     continuation.yield(.room(update.captured))
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -511,16 +563,17 @@ extension ARUnderstanding: ARUnderstandingInput {
                 defer { continuation.finish() }
                 continuation.yield(ARUnderstandingSession.Message.newSession)
                 for await update in self.anchorUpdates {
-                    do {
-                        let anchor = try CapturedAnchorProxy(anchor: update)
-                        continuation.yield(ARUnderstandingSession.Message.anchor(anchor))
-                    } catch {
-                        
+                    switch continuation.yield(ARUnderstandingSession.Message.anchor(update)) {
+                    case .terminated: return
+                    default: break
                     }
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }

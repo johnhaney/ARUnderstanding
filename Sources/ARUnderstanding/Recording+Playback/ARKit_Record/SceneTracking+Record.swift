@@ -42,8 +42,11 @@ extension AnchorRecorder {
                         continuation.yield(captured)
                     }
                 }
-                continuation.onTermination = { @Sendable _ in
-                    task.cancel()
+                continuation.onTermination = { @Sendable termination in
+                    switch termination {
+                    case .cancelled: task.cancel()
+                    default: break
+                    }
                 }
             }
         }
@@ -68,8 +71,11 @@ extension AnchorRecorder {
                         continuation.yield(captured)
                     }
                 }
-                continuation.onTermination = { @Sendable _ in
-                    task.cancel()
+                continuation.onTermination = { @Sendable termination in
+                    switch termination {
+                    case .cancelled: task.cancel()
+                    default: break
+                    }
                 }
             }
         }

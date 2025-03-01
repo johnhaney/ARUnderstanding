@@ -11,8 +11,8 @@ import RealityKit
 
 @Observable
 public class ARUnderstandingVisualizer: ARUnderstandingOutput {
-    private var rootEntity: Entity
-    private var baseEntity: Entity
+    private var rootEntity: Entity // Entity provided to Visualizer, Visualizer adds baseEntity to rootEntity
+    private var baseEntity: Entity // Entity managed by ARUnderstandingVisualizer, all visualizations are children of baseEntity
     private var entities: [UUID: Entity] = [:]
     @MainActor public init(entity: Entity) {
         self.rootEntity = entity
@@ -22,6 +22,7 @@ public class ARUnderstandingVisualizer: ARUnderstandingOutput {
     
     @MainActor public func setEntity(_ entity: Entity) {
         self.rootEntity = entity
+        // Migrate the visualizations to this new rootEntity by adding the baseEntity
         entity.addChild(baseEntity)
     }
     
@@ -29,9 +30,15 @@ public class ARUnderstandingVisualizer: ARUnderstandingOutput {
         entities[anchor.id]
     }
     
-    public func handleNewSession() async {
+    @MainActor public func handleNewSession() async {
         entities.removeAll()
-        await baseEntity.removeAllChildren()
+        
+        // Clear out the old base entity
+        baseEntity.removeFromParent()
+        
+        // replace the base entity with a new one
+        baseEntity = Entity()
+        rootEntity.addChild(baseEntity)
     }
     
     @MainActor public func handleAnchor(_ anchor: CapturedAnchor) {

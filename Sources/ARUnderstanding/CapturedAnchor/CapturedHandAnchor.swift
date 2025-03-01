@@ -117,13 +117,15 @@ public struct CapturedHandSkeleton: HandSkeletonRepresentable, Sendable, Equatab
                          parentJointSource: [joint])
         }
     }
-    
+}
+
+extension HandSkeletonRepresentable {
     public static var neutralPose: CapturedHandSkeleton {
-        if HandSkeleton.self == CapturedHandSkeleton.self {
-            CapturedHandSkeleton(allJoints: [])
-        } else {
+        #if os(visionOS)
             HandSkeleton.neutralPose.captured
-        }
+        #else
+            CapturedHandSkeleton(allJoints: [])
+        #endif
     }
 }
 

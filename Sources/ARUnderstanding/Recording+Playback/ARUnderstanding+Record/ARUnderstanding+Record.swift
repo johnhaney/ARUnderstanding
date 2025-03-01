@@ -42,8 +42,11 @@ extension AnchorRecorder {
                         }
                     }
                 }
-                continuation.onTermination = { @Sendable _ in
-                    task.cancel()
+                continuation.onTermination = { @Sendable termination in
+                    switch termination {
+                    case .cancelled: task.cancel()
+                    default: break
+                    }
                 }
             }
         }
@@ -63,8 +66,11 @@ extension AsyncStream where Element == CapturedAnchor {
                     }
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -83,8 +89,11 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedHandAnchor> 
                     }
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -103,8 +112,11 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedPlaneAnchor>
                     }
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -123,8 +135,11 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedMeshAnchor> 
                     }
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -143,8 +158,11 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedImageAnchor>
                     }
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -163,8 +181,11 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedDeviceAnchor
                     }
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }
@@ -183,8 +204,11 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedWorldAnchor>
                     }
                 }
             }
-            continuation.onTermination = { @Sendable _ in
-                task.cancel()
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
             }
         }
     }

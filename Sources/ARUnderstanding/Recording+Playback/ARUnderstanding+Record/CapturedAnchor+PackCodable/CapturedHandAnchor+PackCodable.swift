@@ -14,7 +14,7 @@ import ARKit
 #endif
 
 extension CapturedHandAnchor: PackEncodable {
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         guard let handSkeleton
         else {
             throw PackError.failed
@@ -59,7 +59,7 @@ extension CapturedHandSkeleton: PackEncodable {
     ]
     }
     
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         var output: Data = Data()
         let jointsByName: [JointName: CapturedHandSkeleton.Joint] = Dictionary(uniqueKeysWithValues: allJoints.map({ ($0.name, $0) }))
         for joint in Self.packJoints {
@@ -74,7 +74,7 @@ extension CapturedHandSkeleton: PackEncodable {
 }
 
 extension CapturedHandSkeleton: PackDecodable {
-    static func unpack(data: Data) throws -> (CapturedHandSkeleton, Int) {
+    public static func unpack(data: Data) throws -> (CapturedHandSkeleton, Int) {
         let (jointTransforms, consumed) = try simd_float4x4.unpack(data: data, count: Self.packJoints.count)
         let joints = zip(Self.packJoints, jointTransforms).map { name, transform in
             CapturedHandSkeleton.Joint(name: name, anchorFromJointTransform: transform, isTracked: true, parentFromJointTransform: name.parentFromJointTransform(transform, jointTransforms), parentJointName: name.parentJointName)
@@ -85,6 +85,38 @@ extension CapturedHandSkeleton: PackDecodable {
 }
 
 extension HandSkeleton.JointName {
+    public static var allJointNames: [HandSkeleton.JointName] {
+        [
+            .wrist,
+            .forearmWrist,
+            .forearmArm,
+            .thumbKnuckle,
+            .thumbIntermediateBase,
+            .thumbIntermediateTip,
+            .thumbTip,
+            .indexFingerMetacarpal,
+            .indexFingerKnuckle,
+            .indexFingerIntermediateBase,
+            .indexFingerIntermediateTip,
+            .indexFingerTip,
+            .middleFingerMetacarpal,
+            .middleFingerKnuckle,
+            .middleFingerIntermediateBase,
+            .middleFingerIntermediateTip,
+            .middleFingerTip,
+            .ringFingerMetacarpal,
+            .ringFingerKnuckle,
+            .ringFingerIntermediateBase,
+            .ringFingerIntermediateTip,
+            .ringFingerTip,
+            .littleFingerMetacarpal,
+            .littleFingerKnuckle,
+            .littleFingerIntermediateBase,
+            .littleFingerIntermediateTip,
+            .littleFingerTip
+        ]
+    }
+    
     func parentFromJointTransform(_ anchorFromJointTransform: simd_float4x4, _ jointTransforms: [simd_float4x4]) -> simd_float4x4 {
         switch self {
         case .wrist: anchorFromJointTransform

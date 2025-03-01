@@ -16,11 +16,11 @@ enum PackError: Error {
     case failed
 }
 
-protocol PackEncodable {
+public protocol PackEncodable {
     func pack() throws -> Data
 }
 
-protocol PackDecodable {
+public protocol PackDecodable {
     static func unpack(data: Data) throws -> (Self, Int)
 }
 

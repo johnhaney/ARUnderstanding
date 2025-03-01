@@ -8,7 +8,7 @@
 import Foundation
 
 extension UUID: PackEncodable {
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         let uuid = uuid
         return Data([
             uuid.0,
@@ -32,7 +32,7 @@ extension UUID: PackEncodable {
 }
 
 extension UUID: PackDecodable {
-    static func unpack(data: Data) throws -> (UUID, Int) {
+    public static func unpack(data: Data) throws -> (UUID, Int) {
         guard data.count >= 16 else { throw UnpackError.needsMoreData(16) }
         let uuid: uuid_t = (
             data[data.startIndex + 0],
@@ -50,7 +50,7 @@ extension UUID: PackDecodable {
             data[data.startIndex + 12],
             data[data.startIndex + 13],
             data[data.startIndex + 14],
-            data[data.startIndex + 15],
+            data[data.startIndex + 15]
             )
         return (UUID(uuid: uuid), 16)
     }

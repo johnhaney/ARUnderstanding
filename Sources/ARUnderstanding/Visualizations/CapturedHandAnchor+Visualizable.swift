@@ -9,29 +9,36 @@
 import ARKit
 #endif
 import RealityKit
+import Spatial
 
 extension CapturedHandAnchor: Visualizable {
     struct CapturedHandComponent: Component {
         let entities: [JointName: Entity]
+        let boneEntities: [JointName: Entity]
     }
     
     @MainActor public func visualize(with materials: [Material]) -> Entity {
         let entity = Entity()
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
-        guard let handSkeleton else { return entity }
         
         let model = visualizationModel(materials: materials)
-        var jointEntities: [JointName: Entity] = entity.components[CapturedHandComponent.self]?.entities ?? [:]
-
-        for joint in handSkeleton.allJoints {
-            let ball = model.clone(recursive: false)
-            ball.name = joint.name.description
-            ball.transform = Transform(matrix: joint.anchorFromJointTransform)
-            entity.addChild(ball)
-            jointEntities[joint.name] = ball
-        }
+        let boneModel = boneModel(materials: materials)
         
-        entity.components.set(CapturedHandComponent(entities: jointEntities))
+        let jointEntities: [JointName: Entity] = Dictionary(uniqueKeysWithValues: JointName.allJointNames.map { joint in
+            let ball = model.clone(recursive: false)
+            ball.name = joint.description
+            entity.addChild(ball)
+            return (joint, ball)
+        })
+
+        let boneEntities: [JointName: Entity] = Dictionary(uniqueKeysWithValues: JointName.allJointNames.compactMap { joint in
+            guard joint.parentName != nil else { return nil }
+            let bone = boneModel.clone(recursive: false)
+            entity.addChild(bone)
+            return (joint, bone)
+        })
+        entity.components.set(CapturedHandComponent(entities: jointEntities, boneEntities: boneEntities))
+        update(visualization: entity, with: materials)
         return entity
     }
     
@@ -41,9 +48,18 @@ extension CapturedHandAnchor: Visualizable {
         return model
     }
     
+    @MainActor private func boneModel(materials: [Material]) -> Entity {
+        let mesh = MeshResource.generateCylinder(height: 1, radius: 0.005)
+        let model = ModelEntity(mesh: mesh, materials: materials)
+        return model
+    }
+    
     @MainActor public func update(visualization entity: Entity, with materials: @autoclosure () -> [Material]) {
-        guard let jointEntities = entity.components[CapturedHandComponent.self]?.entities
+        guard let component = entity.components[CapturedHandComponent.self]
         else { return }
+        
+        let jointEntities = component.entities
+        let boneEntities = component.boneEntities
         
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         
@@ -52,10 +68,18 @@ extension CapturedHandAnchor: Visualizable {
         for joint in handSkeleton.allJoints {
             if let existing = jointEntities[joint.name] {
                 existing.transform = Transform(matrix: joint.anchorFromJointTransform)
+
+                if let parent = joint.name.parentName,
+                   let bone = boneEntities[joint.name],
+                   let bottomTranslation = jointEntities[parent]?.position {
+                    let topPosition = Point3D(existing.position)
+                    let bottomPosition = Point3D(bottomTranslation)
+                    let rotation = Rotation3D(angle: .degrees(90), axis: .x).rotated(by: Rotation3D(position: bottomPosition, target: topPosition))
+                    
+                    bone.transform = Transform(matrix: simd_float4x4(AffineTransform3D(scale: Size3D(width: 1, height: length(topPosition.vector - bottomPosition.vector), depth: 1), rotation: rotation, translation: Vector3D((topPosition.vector + bottomPosition.vector)/2))))
+                }
             }
         }
-        
-        entity.components.set(CapturedHandComponent(entities: jointEntities))
     }
 }
 

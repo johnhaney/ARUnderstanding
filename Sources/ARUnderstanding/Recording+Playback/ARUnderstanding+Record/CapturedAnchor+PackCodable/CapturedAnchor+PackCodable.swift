@@ -8,13 +8,11 @@
 import Foundation
 
 extension CapturedAnchor: PackDecodable {
-    static func unpack(data: Data) throws -> (CapturedAnchor, Int) {
-        guard data.count >= 4 else { throw UnpackError.needsMoreData(4) }
+    public static func unpack(data: Data) throws -> (CapturedAnchor, Int) {
+        guard data.count >= 10 else { throw UnpackError.needsMoreData(4) }
         var offset = 0
         let (timestamp, consumed) = try TimeInterval.unpack(data: data)
         offset += consumed
-        guard data.count >= offset + 3
-        else { throw UnpackError.needsMoreData(offset + 3) }
         let eventCode: UInt8 = data[data.startIndex + offset]
         guard let event = CapturedAnchorEvent(code: eventCode)
         else {
@@ -37,17 +35,17 @@ extension CapturedAnchor: PackDecodable {
             let (imageAnchor, consumed) = try CapturedImageAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
             return (CapturedAnchor.image(CapturedAnchorUpdate<CapturedImageAnchor>(anchor: imageAnchor, timestamp: timestamp, event: event)), offset + consumed)
         case 5:
-            let (objectAnchor, consumed) = try CapturedObjectAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
-            return (CapturedAnchor.object(CapturedAnchorUpdate<CapturedObjectAnchor>(anchor: objectAnchor, timestamp: timestamp, event: event)), offset + consumed)
-        case 6:
             let (worldAnchor, consumed) = try CapturedWorldAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
             return (CapturedAnchor.world(CapturedAnchorUpdate<CapturedWorldAnchor>(anchor: worldAnchor, timestamp: timestamp, event: event)), offset + consumed)
-        case 7:
+        case 6:
             let (deviceAnchor, consumed) = try CapturedDeviceAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
             return (CapturedAnchor.device(CapturedAnchorUpdate<CapturedDeviceAnchor>(anchor: deviceAnchor, timestamp: timestamp, event: event)), offset + consumed)
-        case 8:
+        case 7:
             let (roomAnchor, consumed) = try CapturedRoomAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
             return (CapturedAnchor.room(CapturedAnchorUpdate<CapturedRoomAnchor>(anchor: roomAnchor, timestamp: timestamp, event: event)), offset + consumed)
+        case 8:
+            let (objectAnchor, consumed) = try CapturedObjectAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
+            return (CapturedAnchor.object(CapturedAnchorUpdate<CapturedObjectAnchor>(anchor: objectAnchor, timestamp: timestamp, event: event)), offset + consumed)
         default:
             logger.error("Unrecognized anchor type: \(anchorTypeCode)")
             throw UnpackError.failed
@@ -56,7 +54,7 @@ extension CapturedAnchor: PackDecodable {
 }
 
 extension CapturedAnchor: PackEncodable {
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         switch self {
         case .hand(let update):
             var output = try update.timestamp.pack()
@@ -78,11 +76,6 @@ extension CapturedAnchor: PackEncodable {
             output.append(contentsOf: [event.code, UInt8(4)])
             output.append(try update.pack())
             return output
-        case .object(let update):
-            var output = try update.timestamp.pack()
-            output.append(contentsOf: [event.code, UInt8(8)])
-            output.append(try update.pack())
-            return output
         case .world(let update):
             var output = try update.timestamp.pack()
             output.append(contentsOf: [event.code, UInt8(5)])
@@ -98,12 +91,17 @@ extension CapturedAnchor: PackEncodable {
             output.append(contentsOf: [event.code, UInt8(7)])
             output.append(try update.pack())
             return output
+        case .object(let update):
+            var output = try update.timestamp.pack()
+            output.append(contentsOf: [event.code, UInt8(8)])
+            output.append(try update.pack())
+            return output
         }
     }
 }
 
 extension CapturedAnchorUpdate: PackEncodable where AnchorType: PackEncodable {
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         try anchor.pack()
     }
 }

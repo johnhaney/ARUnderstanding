@@ -14,7 +14,7 @@ import ARKit
 #endif
 
 extension CapturedPlaneAnchor: PackEncodable {
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         var output: Data = Data()
         output.append(try id.pack())
         output.append(contentsOf: [classification.code, alignment.code])
@@ -25,12 +25,16 @@ extension CapturedPlaneAnchor: PackEncodable {
 }
 
 extension CapturedPlaneAnchor: AnchorPackDecodable {
-    static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
+    public static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
+        guard data.count >= 16 + 2 + 64
+        else { throw UnpackError.needsMoreData(16 + 2 + 64) }
         let (id, consumed) = try UUID.unpack(data: data)
         var offset = consumed
         
         let classification = PlaneAnchor.Classification(code: data[(data.startIndex + offset)])
+        offset += 1
         let alignment = PlaneAnchor.Alignment(code: data[(data.startIndex + offset)])
+        offset += 1
         
         let originFromAnchorTransform: simd_float4x4
         do {
@@ -114,7 +118,7 @@ extension PlaneAnchor.Classification {
 }
 
 extension CapturedPlaneAnchor.Geometry: PackCodable {
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         var output: Data = Data()
         output.append(try extent.width.pack())
         output.append(try extent.height.pack())
@@ -132,7 +136,7 @@ extension CapturedPlaneAnchor.Geometry: PackCodable {
         return output
     }
     
-    static func unpack(data: Data) throws -> (CapturedPlaneAnchor.Geometry, Int) {
+    public static func unpack(data: Data) throws -> (CapturedPlaneAnchor.Geometry, Int) {
         let (extentDimensions, consumed) = try Float.unpack(data: data, count: 2)
         var offset = consumed
         let width = extentDimensions[0]
@@ -161,9 +165,11 @@ extension CapturedPlaneAnchor.Geometry: PackCodable {
             vertices = v
         }
         do {
-            let (t, consumed) = try UInt32.unpack(data: data[(data.startIndex + offset)...], count: numTriangles * 3)
+            let result: ([UInt32], Int) = try UInt32.unpack(data: data[(data.startIndex + offset)...], count: numTriangles * 3)
+            let t = result.0
+            let consumed = result.1
             offset += consumed
-            triangles = (0..<numTriangles).map { i in
+            triangles = (0..<numTriangles).map { i -> [UInt32] in
                 [
                     t[i * 3],
                     t[i * 3 + 1],

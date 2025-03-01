@@ -14,7 +14,7 @@ import ARKit
 #endif
 
 extension CapturedWorldAnchor: PackEncodable {
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         var output: Data = Data()
         output.append(try id.pack())
         output.append(try originFromAnchorTransform.pack())
@@ -23,7 +23,7 @@ extension CapturedWorldAnchor: PackEncodable {
 }
 
 extension CapturedWorldAnchor: AnchorPackDecodable {
-    static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
+    public static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
         guard data.count >= 16 + 1 + 16
         else {
             throw UnpackError.needsMoreData(16 + 1 + 16)

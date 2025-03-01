@@ -25,16 +25,9 @@ public class ARUnderstandingSession {
     
     public enum Message: Hashable, Sendable {
         case newSession
-        case anchor(CapturedAnchorProxy)
+        case anchor(CapturedAnchor)
+        case anchorData(Data)
         case unknown
-        
-        static func anchor(_ anchor: CapturedAnchor) -> Self {
-            if let proxy = try? CapturedAnchorProxy(anchor: anchor) {
-                return .anchor(proxy)
-            } else {
-                return .unknown
-            }
-        }
     }
     
     public init() {
@@ -59,6 +52,13 @@ public class ARUnderstandingSession {
         if isRunning {
             self.start()
         }
+    }
+    
+    @MainActor public func remove(inputNamed name: String) {
+        if let inputTask = self.inputTasks.removeValue(forKey: name) {
+            inputTask.cancel()
+        }
+        _ = self.inputs.removeValue(forKey: name)
     }
     
     @discardableResult public func add(output: ARUnderstandingOutput, name: String) -> String {
@@ -87,11 +87,15 @@ public class ARUnderstandingSession {
                     Task {
                         self.handleNewSession()
                     }
-                case .anchor(let proxy):
+                case .anchorData(let data):
                     Task {
-                        if let capturedAnchor = proxy.anchor {
+                        if let (capturedAnchor, _) = try? CapturedAnchor.unpack(data: data) {
                             self.handleAnchor(capturedAnchor)
                         }
+                    }
+                case .anchor(let capturedAnchor):
+                    Task {
+                        self.handleAnchor(capturedAnchor)
                     }
                 case .unknown:
                     break

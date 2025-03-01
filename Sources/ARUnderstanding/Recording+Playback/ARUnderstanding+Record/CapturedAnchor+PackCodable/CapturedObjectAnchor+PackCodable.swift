@@ -14,7 +14,7 @@ import ARKit
 #endif
 
 extension CapturedObjectAnchor: PackEncodable {
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         var output: Data = Data()
         output.append(try id.pack())
         output.append(try originFromAnchorTransform.pack())

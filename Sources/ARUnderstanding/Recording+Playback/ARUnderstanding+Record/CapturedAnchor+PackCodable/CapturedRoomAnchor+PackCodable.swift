@@ -14,7 +14,7 @@ import ARKit
 #endif
 
 extension CapturedRoomAnchor: PackEncodable {
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         var output: Data = Data()
         output.append(try id.pack())
         output.append(try originFromAnchorTransform.pack())
@@ -107,7 +107,7 @@ extension CapturedRoomAnchor: AnchorPackDecodable {
 }
 
 extension CapturedRoomAnchor.ClassifiedGeometry: PackEncodable {
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         var output: Data = Data()
         let classifiedGeometries = self.classifiedGeometries
         output.append(contentsOf: [UInt8(2)])
@@ -134,7 +134,7 @@ extension CapturedRoomAnchor.ClassifiedGeometry: PackEncodable {
 }
 
 extension CapturedRoomAnchor.ClassifiedGeometry: PackDecodable {
-    static func unpack(data: Data) throws -> (CapturedRoomAnchor.CapturedGeometries, Int) {
+    public static func unpack(data: Data) throws -> (CapturedRoomAnchor.CapturedGeometries, Int) {
         
         let numberOfClassified = data[data.startIndex]
         var offset = 1

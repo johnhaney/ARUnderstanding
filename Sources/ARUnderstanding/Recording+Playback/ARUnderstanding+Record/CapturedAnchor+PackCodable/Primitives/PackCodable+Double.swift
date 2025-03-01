@@ -8,13 +8,13 @@
 import Foundation
 
 extension Double: PackEncodable {
-    func pack() throws -> Data {
+    public func pack() throws -> Data {
         .init(underlying: bitPattern.bigEndian)
     }
 }
 
 extension Double: PackDecodable {
-    static func unpack(data: Data) throws -> (Double, Int) {
+    public static func unpack(data: Data) throws -> (Double, Int) {
         let bytes = MemoryLayout<UInt64>.size
         guard data.count >= bytes else { throw UnpackError.needsMoreData(bytes) }
         let value = UInt64(bigEndian: data.interpreted())

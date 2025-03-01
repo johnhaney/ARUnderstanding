@@ -158,6 +158,44 @@ extension HandSkeleton {
 #endif
 
 extension HandSkeleton.JointName {
+    var parentName: HandSkeleton.JointName? {
+        switch self {
+        case .forearmArm: Self.forearmWrist
+        case .forearmWrist: Self.wrist
+        case .wrist: nil
+            
+        case .thumbKnuckle: Self.wrist
+        case .thumbIntermediateBase: Self.thumbKnuckle
+        case .thumbIntermediateTip: Self.thumbIntermediateBase
+        case .thumbTip: Self.thumbIntermediateTip
+            
+        case .indexFingerMetacarpal: Self.wrist
+        case .indexFingerKnuckle: Self.indexFingerMetacarpal
+        case .indexFingerIntermediateBase: Self.indexFingerKnuckle
+        case .indexFingerIntermediateTip: Self.indexFingerIntermediateBase
+        case .indexFingerTip: Self.indexFingerIntermediateTip
+            
+        case .middleFingerMetacarpal: Self.wrist
+        case .middleFingerKnuckle: Self.middleFingerMetacarpal
+        case .middleFingerIntermediateBase: Self.middleFingerKnuckle
+        case .middleFingerIntermediateTip: Self.middleFingerIntermediateBase
+        case .middleFingerTip: Self.middleFingerIntermediateTip
+            
+        case .ringFingerMetacarpal: Self.wrist
+        case .ringFingerKnuckle: Self.ringFingerMetacarpal
+        case .ringFingerIntermediateBase: Self.ringFingerKnuckle
+        case .ringFingerIntermediateTip: Self.ringFingerIntermediateBase
+        case .ringFingerTip: Self.ringFingerIntermediateTip
+            
+        case .littleFingerMetacarpal: Self.wrist
+        case .littleFingerKnuckle: Self.littleFingerMetacarpal
+        case .littleFingerIntermediateBase: Self.littleFingerKnuckle
+        case .littleFingerIntermediateTip: Self.littleFingerIntermediateBase
+        case .littleFingerTip: Self.littleFingerIntermediateTip
+        @unknown default: nil
+        }
+    }
+    
     var parentJointName: String? {
         switch self {
         case .forearmArm: Self.forearmWrist.rawValue
