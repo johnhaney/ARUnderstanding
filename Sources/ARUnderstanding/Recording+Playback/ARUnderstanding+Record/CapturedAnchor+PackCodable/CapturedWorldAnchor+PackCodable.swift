@@ -22,8 +22,8 @@ extension CapturedWorldAnchor: PackEncodable {
     }
 }
 
-extension CapturedWorldAnchor: AnchorPackDecodable {
-    public static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
+extension CapturedWorldAnchor: PackDecodable {
+    public static func unpack(data: Data) throws -> (Self, Int) {
         guard data.count >= 16 + 1 + 16
         else {
             throw UnpackError.needsMoreData(16 + 1 + 16)
@@ -41,8 +41,7 @@ extension CapturedWorldAnchor: AnchorPackDecodable {
             CapturedWorldAnchor(
                 id: id,
                 originFromAnchorTransform: originFromAnchorTransform,
-                isTracked: true,
-                timestamp: timestamp
+                isTracked: true
             ),
             offset
         )

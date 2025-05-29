@@ -43,54 +43,6 @@ extension PackDecodable {
 
 protocol PackCodable: PackEncodable, PackDecodable {}
 
-//
-//protocol PackDataDecodable {
-//    static func unpack(data: Data) throws -> Self
-//}
-//
-//extension PackDecodable: PackDataDecodable {
-//    static func unpack(data: Data) throws -> Self {
-//        let packed: Packed = try Packed.unpack(data: data)
-//        let item = try Self.unpack(packed: packed)
-//        return item
-//    }
-//}
-//
-//protocol PackDataEncodable {
-//    static func packData(item: Self) throws -> Data
-//}
-//
-//extension PackEncodable: PackDataEncodable {
-//    static func packData(item: Self) throws -> Data {
-//        let packed: Packed = self.pack(item: item)
-//        let data: Data = Packed.packData(item: packed)
-//        return data
-//    }
-//}
-//
-//protocol PackDecodableExpectedSize: PackDecodable {
-//    static func expectedPackedLength(data: Data) -> Int
-//}
-//
-//extension PackEncodable {
-//    func packAppending(_ output: Data) throws {
-//        let data = try Self.packData(item: self)
-//        output.append(data)
-//    }
-//}
-//
-//extension PackDecodable where Packed == Data {
-////    init?(packedData: Data, offset: inout Int = 0) {
-////        guard let (unpacked, bytesConsumed) = try? Self.unpack(data: packedData[offset...])
-////        else { return nil }
-////        offset += bytesConsumed
-////        self = unpacked
-////    }
-//    
-//}
-//
-//protocol PackCodable: PackEncodable, PackDecodable {}
-
 extension Data {
     init<T>(underlying value: T) {
         var target = value

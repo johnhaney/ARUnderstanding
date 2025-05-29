@@ -32,7 +32,7 @@ class BinaryWriter<T: PackEncodable> {
     }
     
     /// Writes a single object (encoded as `Data`) to the file
-    private func write(data: Data) throws {
+    public func write(data: Data) throws {
         do {
             try fileHandle.write(contentsOf: data)
         } catch {

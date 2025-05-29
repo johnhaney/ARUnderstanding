@@ -13,7 +13,7 @@ import RealityKit
 
 public protocol Anchor: Sendable, Equatable, Identifiable, Hashable {
     var id: UUID { get }
-    var timestamp: TimeInterval { get }
+//    var timestamp: TimeInterval { get }
     var originFromAnchorTransform: simd_float4x4 { get }
 }
 
@@ -39,19 +39,20 @@ extension CapturedAnchorUpdate {
     var captured: Self { self }
 }
 
-final public class HandTrackingProvider: DataProvider,  HandTrackingProviderRepresentable, Sendable {
-    public static var isSupported: Bool { true }
-    public static var requiredAuthorizations: [ARKitSession.AuthorizationType] { [] }
-    public let state: DataProviderState = .running
-    
-    public var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedHandAnchor>> {
-        AsyncStream { nil }
-    }
-    
-    public let latestAnchors: ((any HandAnchorRepresentable)?, (any HandAnchorRepresentable)?) = (nil, nil)
-    
-    public var description: String { "HandTrackingProvider mock"}
-}
+#if !canImport(ARKit)
+//final public class HandTrackingProvider: DataProvider,  HandTrackingProviderRepresentable, Sendable {
+//    public static var isSupported: Bool { true }
+//    public static var requiredAuthorizations: [ARKitSession.AuthorizationType] { [] }
+//    public let state: DataProviderState = .running
+//    
+//    public var anchorUpdates: AsyncStream<CapturedAnchorUpdate<AnyHandAnchorRepresentable>> {
+//        AsyncStream { nil }
+//    }
+//    
+//    public let latestAnchors: ((any HandAnchorRepresentable)?, (any HandAnchorRepresentable)?) = (nil, nil)
+//    
+//    public var description: String { "HandTrackingProvider mock"}
+//}
 
 final public class ImageTrackingProvider: DataProvider,  ImageTrackingProviderRepresentable, Sendable {
     public static var requiredAuthorizations: [ARKitSession.AuthorizationType] { [] }
@@ -138,6 +139,7 @@ final public class RoomTrackingProvider: DataProvider, RoomTrackingProviderRepre
         AsyncStream { nil }
     }
 }
+#endif
 
 public enum DataProviderState: Sendable {
     case initialized
@@ -146,7 +148,7 @@ public enum DataProviderState: Sendable {
     case paused
 }
 
-public protocol DataProvider : AnyObject, CustomStringConvertible, Sendable {
+public protocol DataProvider : AnyObject, CustomStringConvertible {
     var state: DataProviderState { get }
     static var requiredAuthorizations: [ARKitSession.AuthorizationType] { get }
     static var isSupported: Bool { get }
@@ -161,15 +163,19 @@ public struct ARKitSession: Sendable {
         
     }
     
-    func run(_ providers: [DataProvider]) async throws {}
-    var events: Events { Events() }
-    
-    public struct Events {
+    #if !os(iOS)
+    func run(_ providers: [DataProvider]) async throws {
+        
     }
-    public enum Event {
-        case authorizationChanged(type: ARKitSession.AuthorizationType, status: ARKitSession.AuthorizationStatus)
-        case dataProviderStateChanged(dataProviders: [any DataProvider], newState: DataProviderState, error: ARKitSession.Error?)
-    }
+    #endif
+//    var events: Events { Events() }
+//    
+//    public struct Events {
+//    }
+//    public enum Event {
+//        case authorizationChanged(type: ARKitSession.AuthorizationType, status: ARKitSession.AuthorizationStatus)
+//        case dataProviderStateChanged(dataProviders: [any DataProvider], newState: DataProviderState, error: ARKitSession.Error?)
+//    }
     
     public enum Error: Swift.Error {
         

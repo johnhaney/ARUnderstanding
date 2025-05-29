@@ -33,8 +33,8 @@ extension CapturedRoomAnchor: PackEncodable {
     }
 }
 
-extension CapturedRoomAnchor: AnchorPackDecodable {
-    static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
+extension CapturedRoomAnchor: PackDecodable {
+    public static func unpack(data: Data) throws -> (Self, Int) {
         guard data.count >= 16 + 1 + 16
         else {
             throw UnpackError.needsMoreData(16 + 1 + 16)
@@ -98,8 +98,7 @@ extension CapturedRoomAnchor: AnchorPackDecodable {
                 classifiedGeometries: classifiedGeometries,
                 planeAnchorIDs: planes,
                 meshAnchorIDs: meshes,
-                isCurrentRoom: isCurrentRoom,
-                timestamp: timestamp
+                isCurrentRoom: isCurrentRoom
             ),
             offset
         )

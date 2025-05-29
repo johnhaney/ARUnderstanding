@@ -92,26 +92,6 @@ extension AnchorRecorder {
         var description: String {
             handTrackingProvider.description
         }
-        
-//        static func anchorUpdates(recorder: AnchorRecorder, source: AnchorUpdateSequence<HandAnchor>) -> AsyncStream<CapturedAnchorUpdate<CapturedHandAnchor>> {
-//            AsyncStream { continuation in
-//                Task {
-//                    defer {
-//                        Task {
-//                            try? await recorder.save()
-//                            continuation.finish()
-//                        }
-//                    }
-//                    for await update in source {
-//                        let captured = update.captured
-//                        continuation.yield(captured)
-//                        Task {
-//                            await recorder.record(anchor: .hand(captured))
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 }
 #endif

@@ -13,7 +13,9 @@ import simd
 import ARKit
 #endif
 
-extension CapturedHandAnchor: PackEncodable {
+extension CapturedHandAnchor: PackEncodable {}
+
+extension HandAnchorRepresentable {
     public func pack() throws -> Data {
         guard let handSkeleton
         else {
@@ -28,7 +30,7 @@ extension CapturedHandAnchor: PackEncodable {
     }
 }
 
-extension CapturedHandSkeleton: PackEncodable {
+extension HandSkeleton: PackEncodable {
     static var packJoints: [JointName] { [
         .forearmWrist,
         .forearmArm,
@@ -58,11 +60,13 @@ extension CapturedHandSkeleton: PackEncodable {
         .littleFingerTip
     ]
     }
-    
+}
+
+extension HandSkeletonRepresentable {
     public func pack() throws -> Data {
         var output: Data = Data()
-        let jointsByName: [JointName: CapturedHandSkeleton.Joint] = Dictionary(uniqueKeysWithValues: allJoints.map({ ($0.name, $0) }))
-        for joint in Self.packJoints {
+        let jointsByName: [HandSkeleton.JointName: any HandSkeletonJointRepresentable] = Dictionary(uniqueKeysWithValues: allJoints.map({ ($0.name, $0) }))
+        for joint in HandSkeleton.packJoints {
             if let jointData = jointsByName[joint] {
                 output.append(try jointData.anchorFromJointTransform.pack())
             } else {
@@ -73,14 +77,12 @@ extension CapturedHandSkeleton: PackEncodable {
     }
 }
 
-extension CapturedHandSkeleton: PackDecodable {
-    public static func unpack(data: Data) throws -> (CapturedHandSkeleton, Int) {
-        let (jointTransforms, consumed) = try simd_float4x4.unpack(data: data, count: Self.packJoints.count)
-        let joints = zip(Self.packJoints, jointTransforms).map { name, transform in
-            CapturedHandSkeleton.Joint(name: name, anchorFromJointTransform: transform, isTracked: true, parentFromJointTransform: name.parentFromJointTransform(transform, jointTransforms), parentJointName: name.parentJointName)
-        }
-        let wrist = CapturedHandSkeleton.Joint(name: .wrist, anchorFromJointTransform: .init(1), isTracked: true, parentFromJointTransform: .init(1), parentJointName: nil)
-        return (CapturedHandSkeleton(allJoints: [wrist] + joints), consumed)
+extension SavedHandSkeleton: PackDecodable {
+    public static func unpack(data: Data) throws -> (SavedHandSkeleton, Int) {
+        let (jointTransforms, consumed) = try simd_float4x4.unpack(data: data, count: HandSkeleton.packJoints.count)
+        
+        let skeleton = SavedHandSkeleton(allJointTransforms: jointTransforms)
+        return (skeleton, consumed)
     }
 }
 
@@ -151,12 +153,8 @@ extension HandSkeleton.JointName {
     }
 }
 
-protocol AnchorPackDecodable {
-    static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int)
-}
-
-extension CapturedHandAnchor: AnchorPackDecodable {
-    static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
+extension CapturedHandAnchor: PackDecodable {
+    public static func unpack(data: Data) throws -> (Self, Int) {
         guard data.count >= 16 + 1 + 16 + 26 * 16
         else {
             throw UnpackError.needsMoreData(16 + 1 + 16 + 26 * 16)
@@ -173,8 +171,8 @@ extension CapturedHandAnchor: AnchorPackDecodable {
         }
         let skeleton: CapturedHandSkeleton
         do {
-            let (capturedSkeleton, consumed) = try CapturedHandSkeleton.unpack(data: data[(data.startIndex + offset)...])
-            skeleton = capturedSkeleton
+            let (savedSkeleton, consumed) = try SavedHandSkeleton.unpack(data: data[(data.startIndex + offset)...])
+            skeleton = CapturedHandSkeleton(captured: savedSkeleton)
             offset += consumed
             
         }
@@ -184,8 +182,7 @@ extension CapturedHandAnchor: AnchorPackDecodable {
                 chirality: chirality,
                 handSkeleton: skeleton,
                 isTracked: true,
-                originFromAnchorTransform: originFromAnchorTransform,
-                timestamp: timestamp
+                originFromAnchorTransform: originFromAnchorTransform
             ),
             offset
         )

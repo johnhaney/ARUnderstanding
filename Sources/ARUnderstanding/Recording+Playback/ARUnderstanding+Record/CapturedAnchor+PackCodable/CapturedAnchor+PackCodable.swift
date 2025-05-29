@@ -23,29 +23,35 @@ extension CapturedAnchor: PackDecodable {
         offset += 1
         switch anchorTypeCode {
         case 1:
-            let (handAnchor, consumed) = try CapturedHandAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
-            return (CapturedAnchor.hand(CapturedAnchorUpdate<CapturedHandAnchor>(anchor: handAnchor, timestamp: timestamp, event: event)), offset + consumed)
+            let (handAnchor, consumed) = try CapturedHandAnchor.unpack(data: data[(data.startIndex + offset)...])
+            return (CapturedAnchor.hand(CapturedAnchorUpdate<CapturedHandAnchor>(anchor: handAnchor.captured, timestamp: timestamp, event: event)), offset + consumed)
         case 2:
-            let (meshAnchor, consumed) = try CapturedMeshAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
-            return (CapturedAnchor.mesh(CapturedAnchorUpdate<CapturedMeshAnchor>(anchor: meshAnchor, timestamp: timestamp, event: event)), offset + consumed)
+            let (meshAnchor, consumed) = try CapturedMeshAnchor.unpack(data: data[(data.startIndex + offset)...])
+            return (CapturedAnchor.mesh(CapturedAnchorUpdate<CapturedMeshAnchor>(anchor: meshAnchor.captured, timestamp: timestamp, event: event)), offset + consumed)
         case 3:
-            let (planeAnchor, consumed) = try CapturedPlaneAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
-            return (CapturedAnchor.plane(CapturedAnchorUpdate<CapturedPlaneAnchor>(anchor: planeAnchor, timestamp: timestamp, event: event)), offset + consumed)
+            let (planeAnchor, consumed) = try CapturedPlaneAnchor.unpack(data: data[(data.startIndex + offset)...])
+            return (CapturedAnchor.plane(CapturedAnchorUpdate<CapturedPlaneAnchor>(anchor: planeAnchor.captured, timestamp: timestamp, event: event)), offset + consumed)
         case 4:
-            let (imageAnchor, consumed) = try CapturedImageAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
-            return (CapturedAnchor.image(CapturedAnchorUpdate<CapturedImageAnchor>(anchor: imageAnchor, timestamp: timestamp, event: event)), offset + consumed)
+            let (imageAnchor, consumed) = try CapturedImageAnchor.unpack(data: data[(data.startIndex + offset)...])
+            return (CapturedAnchor.image(CapturedAnchorUpdate<CapturedImageAnchor>(anchor: imageAnchor.captured, timestamp: timestamp, event: event)), offset + consumed)
         case 5:
-            let (worldAnchor, consumed) = try CapturedWorldAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
-            return (CapturedAnchor.world(CapturedAnchorUpdate<CapturedWorldAnchor>(anchor: worldAnchor, timestamp: timestamp, event: event)), offset + consumed)
+            let (worldAnchor, consumed) = try CapturedWorldAnchor.unpack(data: data[(data.startIndex + offset)...])
+            return (CapturedAnchor.world(CapturedAnchorUpdate<CapturedWorldAnchor>(anchor: worldAnchor.captured, timestamp: timestamp, event: event)), offset + consumed)
         case 6:
-            let (deviceAnchor, consumed) = try CapturedDeviceAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
-            return (CapturedAnchor.device(CapturedAnchorUpdate<CapturedDeviceAnchor>(anchor: deviceAnchor, timestamp: timestamp, event: event)), offset + consumed)
+            let (deviceAnchor, consumed) = try CapturedDeviceAnchor.unpack(data: data[(data.startIndex + offset)...])
+            return (CapturedAnchor.device(CapturedAnchorUpdate<CapturedDeviceAnchor>(anchor: deviceAnchor.captured, timestamp: timestamp, event: event)), offset + consumed)
         case 7:
-            let (roomAnchor, consumed) = try CapturedRoomAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
-            return (CapturedAnchor.room(CapturedAnchorUpdate<CapturedRoomAnchor>(anchor: roomAnchor, timestamp: timestamp, event: event)), offset + consumed)
+            let (roomAnchor, consumed) = try CapturedRoomAnchor.unpack(data: data[(data.startIndex + offset)...])
+            return (CapturedAnchor.room(.init(anchor: roomAnchor.captured, timestamp: timestamp, event: event)), offset + consumed)
         case 8:
-            let (objectAnchor, consumed) = try CapturedObjectAnchor.unpack(data: data[(data.startIndex + offset)...], timestamp: timestamp)
-            return (CapturedAnchor.object(CapturedAnchorUpdate<CapturedObjectAnchor>(anchor: objectAnchor, timestamp: timestamp, event: event)), offset + consumed)
+            let (objectAnchor, consumed) = try CapturedObjectAnchor.unpack(data: data[(data.startIndex + offset)...])
+            return (CapturedAnchor.object(CapturedAnchorUpdate<CapturedObjectAnchor>(anchor: objectAnchor.captured, timestamp: timestamp, event: event)), offset + consumed)
+        case 9:
+            let (faceAnchor, consumed) = try CapturedFaceAnchor.unpack(data: data[(data.startIndex + offset)...])
+            return (CapturedAnchor.face(CapturedAnchorUpdate<CapturedFaceAnchor>(anchor: faceAnchor.captured, timestamp: timestamp, event: event)), offset + consumed)
+        case 10:
+            let (bodyAnchor, consumed) = try CapturedBodyAnchor.unpack(data: data[(data.startIndex + offset)...])
+            return (CapturedAnchor.body(CapturedAnchorUpdate<CapturedBodyAnchor>(anchor: bodyAnchor, timestamp: timestamp, event: event)), offset + consumed)
         default:
             logger.error("Unrecognized anchor type: \(anchorTypeCode)")
             throw UnpackError.failed
@@ -56,29 +62,9 @@ extension CapturedAnchor: PackDecodable {
 extension CapturedAnchor: PackEncodable {
     public func pack() throws -> Data {
         switch self {
-        case .hand(let update):
+        case .body(let update):
             var output = try update.timestamp.pack()
-            output.append(contentsOf: [event.code, UInt8(1)])
-            output.append(try update.pack())
-            return output
-        case .mesh(let update):
-            var output = try update.timestamp.pack()
-            output.append(contentsOf: [event.code, UInt8(2)])
-            output.append(try update.pack())
-            return output
-        case .plane(let update):
-            var output = try update.timestamp.pack()
-            output.append(contentsOf: [event.code, UInt8(3)])
-            output.append(try update.pack())
-            return output
-        case .image(let update):
-            var output = try update.timestamp.pack()
-            output.append(contentsOf: [event.code, UInt8(4)])
-            output.append(try update.pack())
-            return output
-        case .world(let update):
-            var output = try update.timestamp.pack()
-            output.append(contentsOf: [event.code, UInt8(5)])
+            output.append(contentsOf: [event.code, UInt8(10)])
             output.append(try update.pack())
             return output
         case .device(let update):
@@ -86,14 +72,44 @@ extension CapturedAnchor: PackEncodable {
             output.append(contentsOf: [event.code, UInt8(6)])
             output.append(try update.pack())
             return output
-        case .room(let update):
+        case .face(let update):
             var output = try update.timestamp.pack()
-            output.append(contentsOf: [event.code, UInt8(7)])
+            output.append(contentsOf: [event.code, UInt8(9)])
+            output.append(try update.pack())
+            return output
+        case .hand(let update):
+            var output = try update.timestamp.pack()
+            output.append(contentsOf: [event.code, UInt8(1)])
+            output.append(try update.pack())
+            return output
+        case .image(let update):
+            var output = try update.timestamp.pack()
+            output.append(contentsOf: [event.code, UInt8(4)])
+            output.append(try update.pack())
+            return output
+        case .mesh(let update):
+            var output = try update.timestamp.pack()
+            output.append(contentsOf: [event.code, UInt8(2)])
             output.append(try update.pack())
             return output
         case .object(let update):
             var output = try update.timestamp.pack()
             output.append(contentsOf: [event.code, UInt8(8)])
+            output.append(try update.pack())
+            return output
+        case .plane(let update):
+            var output = try update.timestamp.pack()
+            output.append(contentsOf: [event.code, UInt8(3)])
+            output.append(try update.pack())
+            return output
+        case .room(let update):
+            var output = try update.timestamp.pack()
+            output.append(contentsOf: [event.code, UInt8(7)])
+            output.append(try update.pack())
+            return output
+        case .world(let update):
+            var output = try update.timestamp.pack()
+            output.append(contentsOf: [event.code, UInt8(5)])
             output.append(try update.pack())
             return output
         }

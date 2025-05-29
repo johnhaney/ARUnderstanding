@@ -5,6 +5,7 @@
 //  Created by John Haney on 2/16/25.
 //
 
+#if canImport(RealityKit)
 import Foundation
 import SwiftUI
 import RealityKit
@@ -30,6 +31,21 @@ public class ARUnderstandingVisualizer: ARUnderstandingOutput {
         entities[anchor.id]
     }
     
+    public func handle(_ message: ARUnderstandingSession.Message) async {
+        switch message {
+        case .newSession:
+            await handleNewSession()
+        case .anchor(let capturedAnchor):
+            await handleAnchor(capturedAnchor)
+        case .authorizationDenied(let string):
+            break
+        case .trackingError(let string):
+            break
+        case .unknown:
+            break
+        }
+    }
+    
     @MainActor public func handleNewSession() async {
         entities.removeAll()
         
@@ -41,14 +57,16 @@ public class ARUnderstandingVisualizer: ARUnderstandingOutput {
         rootEntity.addChild(baseEntity)
     }
     
-    @MainActor public func handleAnchor(_ anchor: CapturedAnchor) {
+    @MainActor public func handleAnchor(_ anchor: CapturedAnchor) async {
+        guard anchor.event != .removed else { return }
         if let existing = entities[anchor.id] {
-            anchor.visualize(in: existing)
+            await anchor.visualize(in: existing, with: [anchor.defaultMaterial])
         } else {
             let entity = Entity()
             entities[anchor.id] = entity
-            anchor.visualize(in: entity)
             baseEntity.addChild(entity)
+            await anchor.visualize(in: entity, with: [anchor.defaultMaterial])
         }
     }
 }
+#endif

@@ -17,29 +17,29 @@ extension CapturedHandAnchor: Visualizable {
         let boneEntities: [JointName: Entity]
     }
     
-    @MainActor public func visualize(with materials: [Material]) -> Entity {
-        let entity = Entity()
-        entity.transform = Transform(matrix: self.originFromAnchorTransform)
+    public func visualize(in rootEntity: Entity, with materials: [Material]) {
+        rootEntity.transform = Transform(matrix: self.originFromAnchorTransform)
         
-        let model = visualizationModel(materials: materials)
-        let boneModel = boneModel(materials: materials)
-        
-        let jointEntities: [JointName: Entity] = Dictionary(uniqueKeysWithValues: JointName.allJointNames.map { joint in
-            let ball = model.clone(recursive: false)
-            ball.name = joint.description
-            entity.addChild(ball)
-            return (joint, ball)
-        })
-
-        let boneEntities: [JointName: Entity] = Dictionary(uniqueKeysWithValues: JointName.allJointNames.compactMap { joint in
-            guard joint.parentName != nil else { return nil }
-            let bone = boneModel.clone(recursive: false)
-            entity.addChild(bone)
-            return (joint, bone)
-        })
-        entity.components.set(CapturedHandComponent(entities: jointEntities, boneEntities: boneEntities))
-        update(visualization: entity, with: materials)
-        return entity
+        if !rootEntity.components.has(CapturedHandComponent.self) {
+            let model = visualizationModel(materials: materials)
+            let boneModel = boneModel(materials: materials)
+            
+            let jointEntities: [JointName: Entity] = Dictionary(uniqueKeysWithValues: JointName.allJointNames.map { joint in
+                let ball = model.clone(recursive: false)
+                ball.name = joint.description
+                rootEntity.addChild(ball)
+                return (joint, ball)
+            })
+            
+            let boneEntities: [JointName: Entity] = Dictionary(uniqueKeysWithValues: JointName.allJointNames.compactMap { joint in
+                guard joint.parentName != nil else { return nil }
+                let bone = boneModel.clone(recursive: false)
+                rootEntity.addChild(bone)
+                return (joint, bone)
+            })
+            rootEntity.components.set(CapturedHandComponent(entities: jointEntities, boneEntities: boneEntities))
+        }
+        update(visualization: rootEntity, with: materials)
     }
     
     @MainActor private func visualizationModel(materials: [Material]) -> Entity {
@@ -84,67 +84,6 @@ extension CapturedHandAnchor: Visualizable {
 }
 
 extension HandSkeleton.JointName {
-//    init(rawValue: String) throws {
-//        switch rawValue {
-//        case "wrist":
-//            self = .wrist
-//        case "thumbKnuckle":
-//            self = .thumbKnuckle
-//        case "thumbIntermediateBase":
-//            self = .thumbIntermediateBase
-//        case "thumbIntermediateTip":
-//            self = .thumbIntermediateTip
-//        case "thumbTip":
-//            self = .thumbTip
-//        case "indexFingerMetacarpal":
-//            self = .indexFingerMetacarpal
-//        case "indexFingerKnuckle":
-//            self = .indexFingerKnuckle
-//        case "indexFingerIntermediateBase":
-//            self = .indexFingerIntermediateBase
-//        case "indexFingerIntermediateTip":
-//            self = .indexFingerIntermediateTip
-//        case "indexFingerTip":
-//            self = .indexFingerTip
-//        case "middleFingerMetacarpal":
-//            self = .middleFingerMetacarpal
-//        case "middleFingerKnuckle":
-//            self = .middleFingerKnuckle
-//        case "middleFingerIntermediateBase":
-//            self = .middleFingerIntermediateBase
-//        case "middleFingerIntermediateTip":
-//            self = .middleFingerIntermediateTip
-//        case "middleFingerTip":
-//            self = .middleFingerTip
-//        case "ringFingerMetacarpal":
-//            self = .ringFingerMetacarpal
-//        case "ringFingerKnuckle":
-//            self = .ringFingerKnuckle
-//        case "ringFingerIntermediateBase":
-//            self = .ringFingerIntermediateBase
-//        case "ringFingerIntermediateTip":
-//            self = .ringFingerIntermediateTip
-//        case "ringFingerTip":
-//            self = .ringFingerTip
-//        case "littleFingerMetacarpal":
-//            self = .littleFingerMetacarpal
-//        case "littleFingerKnuckle":
-//            self = .littleFingerKnuckle
-//        case "littleFingerIntermediateBase":
-//            self = .littleFingerIntermediateBase
-//        case "littleFingerIntermediateTip":
-//            self = .littleFingerIntermediateTip
-//        case "littleFingerTip":
-//            self = .littleFingerTip
-//        case "forearmWrist":
-//            self = .forearmWrist
-//        case "forearmArm":
-//            self = .forearmArm
-//        default:
-//            throw Error.decodingError
-//        }
-//    }
-    
     public var rawValue: String { description }
     
     enum Error: Swift.Error {

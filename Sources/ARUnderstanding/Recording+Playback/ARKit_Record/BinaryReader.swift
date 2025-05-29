@@ -32,10 +32,18 @@ class BinaryReader<T: PackDecodable & Sendable> {
     static private func iterate(fileHandle: FileHandle, _ continuation: AsyncStream<T>.Continuation) throws {
         try self.iterate(fileHandle: fileHandle) { item, shouldStop in
             switch continuation.yield(item) {
-            case .terminated: shouldStop = true
-            case .dropped: break
-            case .enqueued: break
-            @unknown default: break
+            case .terminated:
+                logger.info("BinaryReader iteration terminated")
+                shouldStop = true
+            case .dropped:
+                logger.info("BinaryReader iteration dropped")
+            case .enqueued:
+                logger.info("BinaryReader iteration enqueued")
+            @unknown default:
+                logger.info("BinaryReader iteration UNKNOWN")
+            }
+            if shouldStop {
+                logger.info("BinaryReader iteration terminated")
             }
         }
     }
@@ -50,14 +58,21 @@ class BinaryReader<T: PackDecodable & Sendable> {
                     let (item, consumed) = try T.unpack(data: buffer)
                     buffer = buffer.dropFirst(consumed)
                     try iterator(item, &shouldStop)
-                    guard !shouldStop else { return }
+                    guard !shouldStop else {
+                        logger.info("end of buffer")
+                        return
+                    }
                 }
             } catch (UnpackError.needsMoreData) {
                 // Continue parsing
             } catch {
                 // stop all parsing
                 logger.error("something went wrong: \(error.localizedDescription)")
-                return
+                if buffer.isEmpty {
+                    logger.info("end of buffer (something went wrong)")
+                    break
+                }
+                buffer.removeFirst()
             }
         }
         do {
@@ -65,7 +80,9 @@ class BinaryReader<T: PackDecodable & Sendable> {
                 let (item, consumed) = try T.unpack(data: buffer)
                 buffer = buffer.dropFirst(consumed)
                 try iterator(item, &shouldStop)
-                guard !shouldStop else { return }
+                guard !shouldStop else {
+                    return
+                }
             }
         } catch {
             logger.error("something went wrong at end of file: \(error.localizedDescription)")
@@ -90,14 +107,23 @@ class BinaryReader<T: PackDecodable & Sendable> {
             logger.info("\(id): objects() starting…")
             guard let fileHandle = try? FileHandle(forReadingFrom: fileURL)
             else {
-                logger.info("\(id): objects() finished no file handle")
+                logger.error("\(id): objects() finished no file handle")
                 continuation.finish()
                 return
             }
             
-            do {
-                try Self.iterate(fileHandle: fileHandle, continuation)
-            } catch {
+            Task {
+                defer {
+                    logger.info("\(id): objects() closing…")
+                    fileHandle.closeFile()
+                }
+                do {
+                    logger.info("\(id): objects() iterating…")
+                    try Self.iterate(fileHandle: fileHandle, continuation)
+                    logger.info("\(id): objects() iterated")
+                } catch {
+                    logger.error("\(id): objects() error on iterate \(error.localizedDescription)")
+                }
                 continuation.finish()
             }
         }

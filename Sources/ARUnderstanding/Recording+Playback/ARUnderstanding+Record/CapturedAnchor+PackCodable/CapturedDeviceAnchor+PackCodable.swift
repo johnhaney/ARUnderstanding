@@ -22,8 +22,8 @@ extension CapturedDeviceAnchor: PackEncodable {
     }
 }
 
-extension CapturedDeviceAnchor: AnchorPackDecodable {
-    public static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
+extension CapturedDeviceAnchor: PackDecodable {
+    public static func unpack(data: Data) throws -> (Self, Int) {
         guard data.count >= 16 + 64
         else {
             throw UnpackError.needsMoreData(16 + 64)
@@ -41,8 +41,7 @@ extension CapturedDeviceAnchor: AnchorPackDecodable {
             CapturedDeviceAnchor(
                 id: id,
                 originFromAnchorTransform: originFromAnchorTransform,
-                isTracked: true,
-                timestamp: timestamp
+                isTracked: true
             ),
             offset
         )

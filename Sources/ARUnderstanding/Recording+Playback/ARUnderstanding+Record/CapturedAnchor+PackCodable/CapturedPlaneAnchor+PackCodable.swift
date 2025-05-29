@@ -24,8 +24,8 @@ extension CapturedPlaneAnchor: PackEncodable {
     }
 }
 
-extension CapturedPlaneAnchor: AnchorPackDecodable {
-    public static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
+extension CapturedPlaneAnchor: PackDecodable {
+    public static func unpack(data: Data) throws -> (Self, Int) {
         guard data.count >= 16 + 2 + 64
         else { throw UnpackError.needsMoreData(16 + 2 + 64) }
         let (id, consumed) = try UUID.unpack(data: data)
@@ -43,7 +43,7 @@ extension CapturedPlaneAnchor: AnchorPackDecodable {
             offset += consumed
         }
         let geometry: CapturedPlaneAnchor.Geometry
-        
+
         do {
             let (g, consumed) = try CapturedPlaneAnchor.Geometry.unpack(data: data[(data.startIndex + offset)...])
             geometry = g
@@ -52,12 +52,12 @@ extension CapturedPlaneAnchor: AnchorPackDecodable {
         
         return (
             CapturedPlaneAnchor(
-            id: id,
-            originFromAnchorTransform: originFromAnchorTransform,
-            geometry: geometry,
-            classification: classification,
-            alignment: alignment,
-            timestamp: timestamp),
+                id: id,
+                originFromAnchorTransform: originFromAnchorTransform,
+                geometry: geometry,
+                classification: classification,
+                alignment: alignment
+            ),
             offset
         )
     }
@@ -135,7 +135,9 @@ extension CapturedPlaneAnchor.Geometry: PackCodable {
         }
         return output
     }
-    
+}
+
+extension CapturedPlaneAnchor.Geometry: PackDecodable {
     public static func unpack(data: Data) throws -> (CapturedPlaneAnchor.Geometry, Int) {
         let (extentDimensions, consumed) = try Float.unpack(data: data, count: 2)
         var offset = consumed

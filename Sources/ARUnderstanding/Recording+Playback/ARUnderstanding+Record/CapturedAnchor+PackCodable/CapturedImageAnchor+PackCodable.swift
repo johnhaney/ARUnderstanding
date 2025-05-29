@@ -31,8 +31,8 @@ extension CapturedImageAnchor: PackEncodable {
     }
 }
 
-extension CapturedImageAnchor: AnchorPackDecodable {
-    public static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
+extension CapturedImageAnchor: PackDecodable {
+    public static func unpack(data: Data) throws -> (Self, Int) {
         guard data.count >= 16 + 16 + 4
         else {
             throw UnpackError.needsMoreData(16 + 16 + 4)
@@ -75,8 +75,7 @@ extension CapturedImageAnchor: AnchorPackDecodable {
                 referenceImageName: referenceImageName,
                 estimatedScaleFactor: estimatedScaleFactor,
                 estimatedPhysicalWidth: estimatedPhysicalWidth,
-                estimatedPhysicalHeight: estimatedPhysicalHeight,
-                timestamp: timestamp
+                estimatedPhysicalHeight: estimatedPhysicalHeight
             ),
             offset
         )

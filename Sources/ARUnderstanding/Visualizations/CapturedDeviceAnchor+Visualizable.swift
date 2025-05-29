@@ -11,21 +11,12 @@ import ARKit
 import RealityKit
 
 extension CapturedDeviceAnchor: Visualizable {
-    @MainActor public func visualize(with materials: [Material]) -> Entity {
-        let entity = Entity()
-        entity.transform = Transform(matrix: self.originFromAnchorTransform)
-        let model = visualizationModel(materials: materials)
-        entity.addChild(model)
-        return entity
-    }
-    
-    @MainActor private func visualizationModel(materials: [Material]) -> Entity {
-        let mesh = MeshResource.generateBox(width: 0.14, height: 0.22, depth: 0.14, cornerRadius: 0.02)
-        let model = ModelEntity(mesh: mesh, materials: materials)
-        return model
-    }
-
-    public func update(visualization entity: Entity, with materials: () -> [any Material]) {
-        entity.transform = Transform(matrix: self.originFromAnchorTransform)
+    @MainActor public func visualize(in rootEntity: Entity, with materials: [Material]) async {
+        rootEntity.transform = Transform(matrix: self.originFromAnchorTransform)
+        if !rootEntity.components.has(ModelComponent.self) {
+            let mesh = MeshResource.generateBox(width: 0.14, height: 0.22, depth: 0.14, cornerRadius: 0.02)
+            let model = ModelComponent(mesh: mesh, materials: materials)
+            rootEntity.components.set(model)
+        }
     }
 }

@@ -34,28 +34,54 @@ public struct CapturedDeviceAnchor: DeviceAnchorRepresentable, TrackableAnchor, 
     public var id: UUID
     public var originFromAnchorTransform: simd_float4x4
     public var isTracked: Bool
-    public var timestamp: TimeInterval
     public var description: String { "Device \(originFromAnchorTransform)" }
     
-    public init(id: UUID, originFromAnchorTransform: simd_float4x4, isTracked: Bool, timestamp: TimeInterval) {
+    public init(id: UUID, originFromAnchorTransform: simd_float4x4, isTracked: Bool) {
         self.id = id
         self.originFromAnchorTransform = originFromAnchorTransform
         self.isTracked = isTracked
-        self.timestamp = timestamp
     }
 }
 
 extension DeviceAnchorRepresentable {
     public var captured: CapturedDeviceAnchor {
-        CapturedDeviceAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, isTracked: isTracked, timestamp: timestamp)
+        CapturedDeviceAnchor(id: id, originFromAnchorTransform: originFromAnchorTransform, isTracked: isTracked)
     }
 }
 
-extension simd_float4x4: @retroactive Hashable {
-    public func hash(into hasher: inout Hasher) {
-        hasher.combine(columns.0)
-        hasher.combine(columns.1)
-        hasher.combine(columns.2)
-        hasher.combine(columns.3)
-    }
-}
+//public struct AnyDeviceAnchorRepresentable: DeviceAnchorRepresentable {
+//    init<T: DeviceAnchorRepresentable>(_ anchor: T) {
+//        base = anchor
+//    }
+//    
+//    private let base: any DeviceAnchorRepresentable
+//    
+//    public var originFromAnchorTransform: simd_float4x4 { base.originFromAnchorTransform }
+//    public var isTracked: Bool { base.isTracked }
+//    public var id: UUID { base.id }
+//    public var description: String { base.description }
+//}
+//
+//extension DeviceAnchorRepresentable {
+//    var eraseToAny: AnyDeviceAnchorRepresentable {
+//        AnyDeviceAnchorRepresentable(self)
+//    }
+//}
+//
+//public struct SavedDeviceAnchor: DeviceAnchorRepresentable, CapturableAnchor, TrackableAnchor, Sendable {
+//    public var id: UUID
+//    public var originFromAnchorTransform: simd_float4x4
+//    public var isTracked: Bool
+//    public var description: String { "Device \(originFromAnchorTransform)" }
+//    
+//    public init(id: UUID, originFromAnchorTransform: simd_float4x4, isTracked: Bool) {
+//        self.id = id
+//        self.originFromAnchorTransform = originFromAnchorTransform
+//        self.isTracked = isTracked
+//    }
+//}
+//
+//extension DeviceAnchorRepresentable {
+//    public var captured: AnyDeviceAnchorRepresentable { eraseToAny }
+//    public var saved: AnyDeviceAnchorRepresentable { eraseToAny }
+//}

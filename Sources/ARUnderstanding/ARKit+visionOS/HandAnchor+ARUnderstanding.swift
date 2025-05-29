@@ -1,26 +1,14 @@
 //
-//  ARKit+ARUnderstanding.swift
+//  HandAnchor+ARUnderstanding.swift
+//  ARUnderstanding
 //
-//  matches definitions and capabilities available on visionOS to ARUnderstanding protocols
-//
-//  Created by John Haney on 5/29/24.
+//  Created by John Haney on 5/27/25.
 //
 
 #if os(visionOS)
 import Foundation
 import ARKit
 import RealityKit
-
-extension MeshAnchor: @retroactive Hashable {}
-extension MeshAnchor: MeshAnchorRepresentable {
-    public func shape() async throws -> ShapeResource {
-        try await ShapeResource.generateStaticMesh(from: self)
-    }
-}
-
-extension MeshAnchor.Geometry: MeshAnchorGeometryRepresentable {
-    public var mesh: CapturedMeshGeometry { CapturedMeshGeometry(self) }
-}
 
 extension HandAnchor: @retroactive Hashable {}
 extension HandAnchor: HandAnchorRepresentable {}
@@ -29,60 +17,18 @@ extension HandSkeleton: @retroactive Hashable {}
 extension HandSkeleton: HandSkeletonRepresentable {}
 
 extension HandSkeleton.Joint: @retroactive Hashable {}
-extension HandSkeleton.Joint: HandSkeletonJointRepresentable {}
+extension HandSkeleton.Joint: HandSkeletonJointRepresentable {
+    public var parentJoint: HandSkeleton.Joint? { nil }
+}
 
 extension HandAnchor {
-    public static var neutralPose: CapturedAnchor {
-        .hand(CapturedHandAnchor(id: UUID(), chirality: .left, handSkeleton: .neutralPose, isTracked: false, originFromAnchorTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1)), timestamp: 0).updated(timestamp: 0))
+    public static var neutralPose: CapturedHandAnchor {
+        CapturedHandAnchor(id: UUID(), chirality: .left, handSkeleton: .neutralPose, isTracked: false, originFromAnchorTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1)))
     }
 }
-
-extension ImageAnchor: @retroactive Hashable {}
-extension ImageAnchor: ImageAnchorRepresentable {
-    public var referenceImageName: String? { referenceImage.name }
-    public var estimatedPhysicalWidth: Float { estimatedScaleFactor * Float(referenceImage.physicalSize.width) }
-    public var estimatedPhysicalHeight: Float { estimatedScaleFactor * Float(referenceImage.physicalSize.height) }
-}
-
-extension ObjectAnchor: @retroactive Hashable {}
-extension ObjectAnchor: ObjectAnchorRepresentable {
-    public var referenceObjectName: String {
-        referenceObject.name
-    }
-}
-
-extension PlaneAnchor: @retroactive Hashable {}
-extension PlaneAnchor: PlaneAnchorRepresentable {}
-
-extension DeviceAnchor: @retroactive Hashable {}
-extension DeviceAnchor: @retroactive Equatable {}
-extension DeviceAnchor: DeviceAnchorRepresentable {}
-
-extension WorldAnchor: @retroactive Hashable {}
-extension WorldAnchor: WorldAnchorRepresentable {}
-
-extension RoomAnchor: @retroactive Hashable {}
-extension RoomAnchor: RoomAnchorRepresentable {}
-
-extension PlaneAnchor.Geometry: PlaneAnchorGeometryRepresentable {
-    public var mesh: CapturedPlaneMeshGeometry { CapturedPlaneMeshGeometry(self) }
-    public var captured: CapturedPlaneAnchor.Geometry {
-        CapturedPlaneAnchor.Geometry(extent: extent.captured, mesh: self.mesh)
-    }
-}
-
-extension PlaneAnchor.Geometry.Extent: PlaneAnchorGeometryExtentRepresentable {}
-
 #else
-
 public typealias HandAnchor = CapturedHandAnchor
-public typealias MeshAnchor = CapturedMeshAnchor
-public typealias WorldAnchor = CapturedWorldAnchor
-public typealias ImageAnchor = CapturedImageAnchor
-public typealias ObjectAnchor = CapturedObjectAnchor
-public typealias PlaneAnchor = CapturedPlaneAnchor
 public typealias HandSkeleton = CapturedHandSkeleton
-public typealias RoomAnchor = CapturedRoomAnchor
 
 public extension HandAnchor {
     enum Chirality: Sendable {

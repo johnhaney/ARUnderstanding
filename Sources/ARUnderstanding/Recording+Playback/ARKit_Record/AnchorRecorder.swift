@@ -62,6 +62,10 @@ public actor AnchorRecorder {
         try? writer?.write(object: anchor)
     }
     
+    public func record(anchorData: Data) async {
+        try? writer?.write(data: anchorData)
+    }
+
     public static func fileURL(outputName: String) throws -> URL {
         let documentURL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
         let fileURL = documentURL.appendingPathComponent("\(outputName).anchorsession", conformingTo: .arAnchorRecording)
@@ -70,11 +74,19 @@ public actor AnchorRecorder {
 }
 
 extension AnchorRecorder: ARUnderstandingOutput {
-    public func handleNewSession() async {
-        startNewSession()
-    }
-    public func handleAnchor(_ anchor: CapturedAnchor) async {
-        await self.record(anchor: anchor)
+    public func handle(_ message: ARUnderstandingSession.Message) async {
+        switch message {
+        case .newSession:
+            startNewSession()
+        case .anchor(let capturedAnchor):
+            await self.record(anchor: capturedAnchor)
+        case .authorizationDenied(let string):
+            break
+        case .trackingError(let string):
+            break
+        case .unknown:
+            break
+        }
     }
 }
 

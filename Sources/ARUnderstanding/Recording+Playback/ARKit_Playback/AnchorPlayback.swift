@@ -14,30 +14,57 @@ final public class AnchorPlayback: ARUnderstandingProvider, ARUnderstandingInput
         self.fileURL = Bundle.main.url(forResource: fileName, withExtension: "anchorsession")
     }
     
+    public init(url: URL) {
+        self.fileURL = url
+    }
+    
     private static func fileURL(outputName: String) throws -> URL {
         let documentURL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
         let fileURL = documentURL.appendingPathComponent("\(outputName).anchorsession", conformingTo: .arAnchorRecording)
         return fileURL
     }
 
-    public var sessionUpdates: AsyncStream<ARUnderstandingSession.Message> {
+    public var messages: AsyncStream<ARUnderstandingSession.Message> {
         AsyncStream { continuation in
-            if let fileURL,
-               let reader = BinaryReader<CapturedAnchor>(fileURL: fileURL) {
-                let task: Task<(), Never> = Task {
-                    defer { continuation.finish() }
+            if let fileURL {
+                let task: Task<(), Never> = Task.detached {
+                    defer {
+                        continuation.finish()
+                    }
+                    continuation.yield(ARUnderstandingSession.Message.newSession)
                     repeat {
-                        continuation.yield(ARUnderstandingSession.Message.newSession)
-                        let start = Date()
-                        var firstTimestamp: TimeInterval?
-                        for await event in reader.objects() {
-                            let offset = event.timestamp - (firstTimestamp ?? event.timestamp)
-                            firstTimestamp = firstTimestamp ?? event.timestamp
-                            while offset > Date().timeIntervalSince(start) {
-                                try? await Task.sleep(for: .seconds(offset - Date().timeIntervalSince(start)))
-                            }
-                            do {
-                                continuation.yield(ARUnderstandingSession.Message.anchor(event))
+                        if let reader = BinaryReader<CapturedAnchor>(fileURL: fileURL) {
+                            let start = Date()
+                            var firstTimestampSaved: TimeInterval?
+                            var item = 0
+                            for await event in reader.objects() {
+                                item += 1
+                                let firstTimestamp: TimeInterval
+                                if let firstTimestampSaved {
+                                    firstTimestamp = firstTimestampSaved
+                                } else {
+                                    firstTimestampSaved = event.timestamp
+                                    firstTimestamp = event.timestamp
+                                }
+                                let offset = event.timestamp - firstTimestamp
+                                let startOffset = Date().timeIntervalSince(start)
+                                if offset > startOffset {
+                                    try? await Task.sleep(for: .milliseconds(Int((offset - startOffset)*1000)))
+                                }
+                                do {
+                                    var shouldStop = false
+                                    switch continuation.yield(ARUnderstandingSession.Message.anchor(event)) {
+                                    case .terminated:
+                                        shouldStop = true
+                                    case .dropped: break
+                                    case .enqueued: break
+                                    @unknown default: break
+                                    }
+                                    
+                                    if shouldStop {
+                                        break
+                                    }
+                                }
                             }
                         }
                         try? await Task.sleep(for: .seconds(1))

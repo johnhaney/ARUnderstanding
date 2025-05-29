@@ -18,6 +18,8 @@ public protocol CapturableAnchor: Anchor, Hashable {
 
 public enum CapturedAnchor: Sendable, Hashable, Equatable {
     case hand(CapturedAnchorUpdate<CapturedHandAnchor>)
+    case body(CapturedAnchorUpdate<CapturedBodyAnchor>)
+    case face(CapturedAnchorUpdate<CapturedFaceAnchor>)
     case mesh(CapturedAnchorUpdate<CapturedMeshAnchor>)
     case plane(CapturedAnchorUpdate<CapturedPlaneAnchor>)
     case image(CapturedAnchorUpdate<CapturedImageAnchor>)
@@ -71,27 +73,31 @@ public enum CapturedAnchorEvent: String, Sendable, Hashable {
 extension CapturedAnchor {
     private var anchor: any Anchor {
         switch self {
-        case .hand(let update): update.anchor
-        case .mesh(let update): update.anchor
-        case .plane(let update): update.anchor
-        case .image(let update): update.anchor
-        case .world(let update): update.anchor
+        case .body(let update): update.anchor
         case .device(let update): update.anchor
-        case .room(let update): update.anchor
+        case .face(let update): update.anchor
+        case .hand(let update): update.anchor
+        case .image(let update): update.anchor
+        case .mesh(let update): update.anchor
         case .object(let update): update.anchor
+        case .plane(let update): update.anchor
+        case .room(let update): update.anchor
+        case .world(let update): update.anchor
         }
     }
     
     private var update: any CapturedAnchorUpdateRepresentable {
         switch self {
-        case .hand(let update): update
-        case .mesh(let update): update
-        case .plane(let update): update
-        case .image(let update): update
-        case .world(let update): update
+        case .body(let update): update
         case .device(let update): update
-        case .room(let update): update
+        case .face(let update): update
+        case .hand(let update): update
+        case .image(let update): update
+        case .mesh(let update): update
         case .object(let update): update
+        case .plane(let update): update
+        case .room(let update): update
+        case .world(let update): update
         }
     }
     

@@ -23,8 +23,8 @@ extension CapturedMeshAnchor: PackEncodable {
     }
 }
 
-extension CapturedMeshAnchor: AnchorPackDecodable {
-    public static func unpack(data: Data, timestamp: TimeInterval) throws -> (Self, Int) {
+extension CapturedMeshAnchor: PackDecodable {
+    public static func unpack(data: Data) throws -> (Self, Int) {
         guard data.count >= 16 + 64 + 1
         else {
             throw UnpackError.needsMoreData(16 + 64 + 1)
@@ -46,12 +46,12 @@ extension CapturedMeshAnchor: AnchorPackDecodable {
         }
         
         return (
-            CapturedMeshAnchor(
+            SavedMeshAnchor(
                 id: id,
                 originFromAnchorTransform: originFromAnchorTransform,
                 geometry: geometry,
-                timestamp: timestamp
-            ),
+                description: "MeshAnchor"
+            ).captured,
             offset
         )
     }
@@ -80,7 +80,9 @@ extension CapturedMeshAnchor.Geometry: PackCodable {
         output.append(contentsOf: classifications)
         return output
     }
-    
+}
+
+extension CapturedMeshAnchor.Geometry: PackDecodable {
     public static func unpack(data: Data) throws -> (CapturedMeshAnchor.Geometry, Int) {
         guard data.count >= 32
         else {
