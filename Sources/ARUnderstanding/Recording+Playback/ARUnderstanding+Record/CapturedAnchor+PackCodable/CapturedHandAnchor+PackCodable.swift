@@ -23,7 +23,14 @@ extension HandAnchorRepresentable {
         }
         var output: Data = Data()
         output.append(try id.pack())
-        output.append(contentsOf: [chirality == .left ? 1 : 2])
+        let chiralityByte: UInt8
+        switch chirality {
+        case .left:
+            chiralityByte = 1 // 0x01
+        case .right:
+            chiralityByte = 2 // 0x10
+        }
+        output.append(contentsOf: [chiralityByte])
         output.append(try originFromAnchorTransform.pack())
         output.append(try handSkeleton.pack())
         return output
@@ -161,7 +168,8 @@ extension CapturedHandAnchor: PackDecodable {
         }
         let (id, consumed) = try UUID.unpack(data: data)
         var offset = consumed
-        let chirality: HandAnchor.Chirality = data[data.startIndex + offset] == 1 ? .left : .right
+        // Read as a bitmask to allow for future expansion of this byte
+        let chirality: HandAnchor.Chirality = (data[data.startIndex + offset] & 0x01 == 0x01) ? .left : .right
         offset += 1
         let originFromAnchorTransform: simd_float4x4
         do {
