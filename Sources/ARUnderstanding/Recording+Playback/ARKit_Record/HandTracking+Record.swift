@@ -30,12 +30,18 @@ extension AnchorRecorder {
             AsyncStream { continuation in
                 let originalAnchorUpdates = originalAnchorUpdates
                 let recorder = recorder
-                Task {
+                let task = Task {
                     defer { continuation.finish() }
                     for await update in originalAnchorUpdates {
                         let captured = update.captured
                         await recorder.record(anchor: update)
                         continuation.yield(captured)
+                    }
+                }
+                continuation.onTermination = { @Sendable termination in
+                    switch termination {
+                    case .cancelled: task.cancel()
+                    default: break
                     }
                 }
             }
@@ -58,12 +64,18 @@ extension AnchorRecorder {
         
         var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedHandAnchor>> {
             AsyncStream { continuation in
-                Task {
+                let task = Task {
                     defer { continuation.finish() }
                     for await update in handTrackingProvider.anchorUpdates {
                         let captured = update.captured
                         await recorder.record(anchor: update)
                         continuation.yield(captured)
+                    }
+                }
+                continuation.onTermination = { @Sendable termination in
+                    switch termination {
+                    case .cancelled: task.cancel()
+                    default: break
                     }
                 }
             }
@@ -80,26 +92,6 @@ extension AnchorRecorder {
         var description: String {
             handTrackingProvider.description
         }
-        
-//        static func anchorUpdates(recorder: AnchorRecorder, source: AnchorUpdateSequence<HandAnchor>) -> AsyncStream<CapturedAnchorUpdate<CapturedHandAnchor>> {
-//            AsyncStream { continuation in
-//                Task {
-//                    defer {
-//                        Task {
-//                            try? await recorder.save()
-//                            continuation.finish()
-//                        }
-//                    }
-//                    for await update in source {
-//                        let captured = update.captured
-//                        continuation.yield(captured)
-//                        Task {
-//                            await recorder.record(anchor: .hand(captured))
-//                        }
-//                    }
-//                }
-//            }
-//        }
     }
 }
 #endif

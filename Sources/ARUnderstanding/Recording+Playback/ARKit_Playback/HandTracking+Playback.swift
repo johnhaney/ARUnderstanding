@@ -29,12 +29,18 @@ extension AnchorPlayback {
         public var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedHandAnchor>> {
             AsyncStream { continuation in
                 let handUpdates = playback.handUpdates
-                Task {
+                let task = Task {
                     defer {
                         continuation.finish()
                     }
                     for await update in handUpdates {
                         continuation.yield(update)
+                    }
+                }
+                continuation.onTermination = { @Sendable termination in
+                    switch termination {
+                    case .cancelled: task.cancel()
+                    default: break
                     }
                 }
             }

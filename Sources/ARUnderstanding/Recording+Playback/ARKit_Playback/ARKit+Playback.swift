@@ -38,6 +38,12 @@ extension WorldTrackingProvider {
     }
 }
 
+extension RoomTrackingProvider {
+    public func playback(fileName: String) -> RoomTrackingProviderRepresentable {
+        AnchorPlayback(fileName: fileName).roomTrackingProvider(self)
+    }
+}
+
 extension AnchorPlayback: ARKitRepresentable {
     func handTrackingProvider(_: HandTrackingProvider) -> any HandTrackingProviderRepresentable {
         AnchorPlayback.HandTrackingPlaybackProvider(playback: self)
@@ -61,6 +67,10 @@ extension AnchorPlayback: ARKitRepresentable {
     
     func objectTrackingProvider(_: ObjectTrackingProvider) -> any ObjectTrackingProviderRepresentable {
         AnchorPlayback.ObjectTrackingPlaybackProvider(playback: self)
+    }
+    
+    func roomTrackingProvider(_: RoomTrackingProvider) -> any RoomTrackingProviderRepresentable {
+        AnchorPlayback.RoomTrackingPlaybackProvider(playback: self)
     }
 }
 #endif

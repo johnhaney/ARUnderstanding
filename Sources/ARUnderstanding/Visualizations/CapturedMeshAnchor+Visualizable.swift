@@ -11,43 +11,35 @@ import ARKit
 import RealityKit
 
 extension CapturedMeshAnchor: Visualizable {
-    @MainActor public func visualize(with materials: [Material]) -> Entity {
-        let entity = Entity()
-        entity.transform = Transform(matrix: self.originFromAnchorTransform)
-        Task {
-            if let model = await visualizationModel(materials: materials) {
-                entity.addChild(model)
-            }
+    @MainActor public func visualize(in rootEntity: Entity, with materials: [Material]) async {
+        if await visualizeInPlace(in: rootEntity, with: materials) {
+            return
         }
         
-        return entity
-    }
-    
-    @MainActor private func visualizationModel(materials: [Material]) async -> Entity? {
+        // Create and visualize mesh under given root
+        rootEntity.transform = Transform(matrix: self.originFromAnchorTransform)
         guard let mesh: MeshResource = await mesh(name: "Visualization")
-        else { return nil }
-        let model = ModelEntity(mesh: mesh, materials: materials)
-        return model
-    }
-
-    @MainActor public func update(visualization entity: Entity, with materials: () -> [Material]) {
-        let transform = Transform(matrix: self.originFromAnchorTransform)
-        entity.transform = transform
-        // Remove the previous mesh and we will start over each time
-        for child in entity.children {
-            child.removeFromParent()
-        }
-        let materials = materials()
-        Task {
-            if let model = await visualizationModel(materials: materials) {
-                update(visualization: entity, with: model, transform: transform)
-            }
-        }
+        else { return }
+        let model = ModelComponent(mesh: mesh, materials: materials)
+        rootEntity.components.set(model)
     }
     
-    @MainActor
-    private func update(visualization entity: Entity, with model: Entity, transform: Transform) {
-        entity.addChild(model)
+    @MainActor public func visualizeInPlace(in rootEntity: Entity, with materials: [Material]) async -> Bool {
+        #if os(iOS)
+        guard let _ = self.base as? ARMeshAnchor else { return false }
+        // iOS and macOS the meshes are already added to the scene locally
+        // so we will just decorate them with the visualization
+        guard let scene = rootEntity.scene else { return false }
+        
+        let sceneUnderstandingQuery = EntityQuery(where: .has(SceneUnderstandingComponent.self) && .has(ModelComponent.self))
+        let queryResult = scene.performQuery(sceneUnderstandingQuery)
+        queryResult.forEach { entity in
+            entity.components[ModelComponent.self]?.materials = materials
+        }
+        return true
+        #else
+        return false
+        #endif
     }
 }
 

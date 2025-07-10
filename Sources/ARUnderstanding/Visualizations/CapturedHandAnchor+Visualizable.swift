@@ -9,23 +9,37 @@
 import ARKit
 #endif
 import RealityKit
+import Spatial
 
 extension CapturedHandAnchor: Visualizable {
-    @MainActor public func visualize(with materials: [Material]) -> Entity {
-        let entity = Entity()
-        entity.transform = Transform(matrix: self.originFromAnchorTransform)
-        guard let handSkeleton else { return entity }
+    struct CapturedHandComponent: Component {
+        let entities: [JointName: Entity]
+        let boneEntities: [JointName: Entity]
+    }
+    
+    public func visualize(in rootEntity: Entity, with materials: [Material]) {
+        rootEntity.transform = Transform(matrix: self.originFromAnchorTransform)
         
-        let model = visualizationModel(materials: materials)
-        
-        for joint in handSkeleton.allJoints {
-            let ball = model.clone(recursive: false)
-            ball.name = joint.name.description
-            ball.transform = Transform(matrix: joint.anchorFromJointTransform)
-            entity.addChild(ball)
+        if !rootEntity.components.has(CapturedHandComponent.self) {
+            let model = visualizationModel(materials: materials)
+            let boneModel = boneModel(materials: materials)
+            
+            let jointEntities: [JointName: Entity] = Dictionary(uniqueKeysWithValues: JointName.allJointNames.map { joint in
+                let ball = model.clone(recursive: false)
+                ball.name = joint.description
+                rootEntity.addChild(ball)
+                return (joint, ball)
+            })
+            
+            let boneEntities: [JointName: Entity] = Dictionary(uniqueKeysWithValues: JointName.allJointNames.compactMap { joint in
+                guard joint.parentName != nil else { return nil }
+                let bone = boneModel.clone(recursive: false)
+                rootEntity.addChild(bone)
+                return (joint, bone)
+            })
+            rootEntity.components.set(CapturedHandComponent(entities: jointEntities, boneEntities: boneEntities))
         }
-        
-        return entity
+        update(visualization: rootEntity, with: materials)
     }
     
     @MainActor private func visualizationModel(materials: [Material]) -> Entity {
@@ -34,112 +48,42 @@ extension CapturedHandAnchor: Visualizable {
         return model
     }
     
-    @MainActor private func createJointVisualization<Joint: HandSkeletonJointRepresentable>(joint: Joint, materials: [Material]) -> Entity {
-        let ball = visualizationModel(materials: materials)
-        
-        ball.name = joint.name.description
-        ball.transform = Transform(matrix: joint.anchorFromJointTransform)
-        return ball
+    @MainActor private func boneModel(materials: [Material]) -> Entity {
+        let mesh = MeshResource.generateCylinder(height: 1, radius: 0.005)
+        let model = ModelEntity(mesh: mesh, materials: materials)
+        return model
     }
     
     @MainActor public func update(visualization entity: Entity, with materials: @autoclosure () -> [Material]) {
+        guard let component = entity.components[CapturedHandComponent.self]
+        else { return }
+        
+        let jointEntities = component.entities
+        let boneEntities = component.boneEntities
+        
         entity.transform = Transform(matrix: self.originFromAnchorTransform)
         
-        let existingJoints = Set(entity.children.map(\.name))
-        let currentJoints = Set(handSkeleton?.allJoints.map(\.name.description) ?? [])
-        let remove = existingJoints.subtracting(currentJoints)
-        let update = currentJoints.intersection(existingJoints)
-        let add = currentJoints.subtracting(existingJoints)
+        guard let handSkeleton else { return }
+        
+        for joint in handSkeleton.allJoints {
+            if let existing = jointEntities[joint.name] {
+                existing.transform = Transform(matrix: joint.anchorFromJointTransform)
 
-        for jointName in remove {
-            entity.findEntity(named: jointName)?.removeFromParent()
-        }
-        
-        guard let handSkeleton else {
-            return
-        }
-        
-        for jointName in update {
-            guard let joint = try? JointName(rawValue: jointName) else { continue }
-            
-            entity.findEntity(named: jointName)?.transform = Transform(matrix: handSkeleton.joint(joint).anchorFromJointTransform)
-        }
-        
-        guard !add.isEmpty else { return }
-        let materials = materials()
-        
-        for jointName in add {
-            guard let name = try? JointName(rawValue: jointName) else { continue }
-            let joint = handSkeleton.joint(name)
-            
-            let ball = createJointVisualization(joint: joint, materials: materials)
-            entity.addChild(ball)
+                if let parent = joint.name.parentName,
+                   let bone = boneEntities[joint.name],
+                   let bottomTranslation = jointEntities[parent]?.position {
+                    let topPosition = Point3D(existing.position)
+                    let bottomPosition = Point3D(bottomTranslation)
+                    let rotation = Rotation3D(angle: .degrees(90), axis: .x).rotated(by: Rotation3D(position: bottomPosition, target: topPosition))
+                    
+                    bone.transform = Transform(matrix: simd_float4x4(AffineTransform3D(scale: Size3D(width: 1, height: length(topPosition.vector - bottomPosition.vector), depth: 1), rotation: rotation, translation: Vector3D((topPosition.vector + bottomPosition.vector)/2))))
+                }
+            }
         }
     }
 }
 
 extension HandSkeleton.JointName {
-//    init(rawValue: String) throws {
-//        switch rawValue {
-//        case "wrist":
-//            self = .wrist
-//        case "thumbKnuckle":
-//            self = .thumbKnuckle
-//        case "thumbIntermediateBase":
-//            self = .thumbIntermediateBase
-//        case "thumbIntermediateTip":
-//            self = .thumbIntermediateTip
-//        case "thumbTip":
-//            self = .thumbTip
-//        case "indexFingerMetacarpal":
-//            self = .indexFingerMetacarpal
-//        case "indexFingerKnuckle":
-//            self = .indexFingerKnuckle
-//        case "indexFingerIntermediateBase":
-//            self = .indexFingerIntermediateBase
-//        case "indexFingerIntermediateTip":
-//            self = .indexFingerIntermediateTip
-//        case "indexFingerTip":
-//            self = .indexFingerTip
-//        case "middleFingerMetacarpal":
-//            self = .middleFingerMetacarpal
-//        case "middleFingerKnuckle":
-//            self = .middleFingerKnuckle
-//        case "middleFingerIntermediateBase":
-//            self = .middleFingerIntermediateBase
-//        case "middleFingerIntermediateTip":
-//            self = .middleFingerIntermediateTip
-//        case "middleFingerTip":
-//            self = .middleFingerTip
-//        case "ringFingerMetacarpal":
-//            self = .ringFingerMetacarpal
-//        case "ringFingerKnuckle":
-//            self = .ringFingerKnuckle
-//        case "ringFingerIntermediateBase":
-//            self = .ringFingerIntermediateBase
-//        case "ringFingerIntermediateTip":
-//            self = .ringFingerIntermediateTip
-//        case "ringFingerTip":
-//            self = .ringFingerTip
-//        case "littleFingerMetacarpal":
-//            self = .littleFingerMetacarpal
-//        case "littleFingerKnuckle":
-//            self = .littleFingerKnuckle
-//        case "littleFingerIntermediateBase":
-//            self = .littleFingerIntermediateBase
-//        case "littleFingerIntermediateTip":
-//            self = .littleFingerIntermediateTip
-//        case "littleFingerTip":
-//            self = .littleFingerTip
-//        case "forearmWrist":
-//            self = .forearmWrist
-//        case "forearmArm":
-//            self = .forearmArm
-//        default:
-//            throw Error.decodingError
-//        }
-//    }
-    
     public var rawValue: String { description }
     
     enum Error: Swift.Error {

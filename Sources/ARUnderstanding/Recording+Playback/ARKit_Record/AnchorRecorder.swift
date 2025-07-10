@@ -7,8 +7,6 @@
 
 import Foundation
 import UniformTypeIdentifiers
-import ARUnderstanding
-import JSONLStream
 import OSLog
 
 let logger = Logger(subsystem: "com.appsyoucanmake.AnchorRecorder", category: "general")
@@ -26,16 +24,16 @@ public struct AnchorRecording: Sendable {
 public actor AnchorRecorder {
     private let prefix: String
     public private(set) var outputName: String
-    private var writer: JSONLWriter?
+    private var writer: BinaryWriter<CapturedAnchor>?
     
-    public func recording() async throws -> AnchorRecording {
+    public func recording() throws -> AnchorRecording {
         let fileURL = try Self.fileURL(outputName: outputName)
-        guard let reader = JSONLReader(fileURL: fileURL)
+        guard let reader = BinaryReader<CapturedAnchor>(fileURL: fileURL)
         else {
             logger.error("Error providing recording")
             throw NSError(domain: "com.appsyoucanmake.AnchorRecorder", code: 1, userInfo: nil)
         }
-        let records: [CapturedAnchor] = await reader.allObjects()
+        let records: [CapturedAnchor] = reader.allObjects()
         return AnchorRecording(records: records)
     }
     
@@ -47,23 +45,27 @@ public actor AnchorRecorder {
         self.outputName = "\(prefix)-\(formatter.string(from: Date()))"
         self.writer = nil
         if let fileURL = try? Self.fileURL(outputName: self.outputName) {
-            self.writer = JSONLWriter(fileURL: fileURL, appendIfExists: true)
+            self.writer = BinaryWriter<CapturedAnchor>(fileURL: fileURL, appendIfExists: true)
         }
     }
     
-    private func startNewSession() async {
+    private func startNewSession() {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd-HH-mm-ss"
         self.outputName = "\(prefix)-\(formatter.string(from: Date()))"
         if let fileURL = try? Self.fileURL(outputName: self.outputName) {
-            self.writer = JSONLWriter(fileURL: fileURL, appendIfExists: true)
+            self.writer = BinaryWriter<CapturedAnchor>(fileURL: fileURL, appendIfExists: true)
         }
     }
     
     public func record(anchor: CapturedAnchor) async {
-        try? await writer?.write(jsonObject: anchor)
+        try? writer?.write(object: anchor)
     }
     
+    public func record(anchorData: Data) async {
+        try? writer?.write(data: anchorData)
+    }
+
     public static func fileURL(outputName: String) throws -> URL {
         let documentURL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
         let fileURL = documentURL.appendingPathComponent("\(outputName).anchorsession", conformingTo: .arAnchorRecording)
@@ -72,11 +74,19 @@ public actor AnchorRecorder {
 }
 
 extension AnchorRecorder: ARUnderstandingOutput {
-    public func handleNewSession() async {
-        await startNewSession()
-    }
-    public func handleAnchor(_ anchor: CapturedAnchor) async {
-        await self.record(anchor: anchor)
+    public func handle(_ message: ARUnderstandingSession.Message) async {
+        switch message {
+        case .newSession:
+            startNewSession()
+        case .anchor(let capturedAnchor):
+            await self.record(anchor: capturedAnchor)
+        case .authorizationDenied(let string):
+            break
+        case .trackingError(let string):
+            break
+        case .unknown:
+            break
+        }
     }
 }
 
@@ -109,3 +119,4 @@ extension AnchorRecorder {
     }
 }
 #endif
+

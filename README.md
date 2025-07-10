@@ -71,3 +71,17 @@ for await anchor in ARUnderstanding(providers: [.hands(HandTrackingProvider())])
 }
 ```
 
+With ARUnderstanding 2.0, the whole infrastructure of how ARUnderstanding runs will move to run on top of ARUnderstandingSession.
+
+This will ensure that you can safely and easily add the providers you want and ARUnderstanding will update the ARUnderstandingSession as needed to adapt to what your app is using.
+
+ARUnderstanding runs an ARUnderstandingSession which links Input and Output
+
+ARUnderstandingInput is implemented by:
+
+AnchorPlayback - for playing back anchors saved in a file
+
+ARUnderstandingOutput is implemented by:
+
+AnchorRecorder - for capturing the stream of anchors and saving to a file
+ARUnderstandingVisualizer - for displaying visual entities in a RealityView representing the anchors

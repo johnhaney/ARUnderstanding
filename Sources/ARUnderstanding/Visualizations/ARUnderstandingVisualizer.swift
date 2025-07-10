@@ -5,20 +5,68 @@
 //  Created by John Haney on 2/16/25.
 //
 
+#if canImport(RealityKit)
 import Foundation
+import SwiftUI
 import RealityKit
 
+@Observable
 public class ARUnderstandingVisualizer: ARUnderstandingOutput {
-    private var baseEntity: Entity
-    public init(entity: Entity) {
-        self.baseEntity = entity
+    private var rootEntity: Entity // Entity provided to Visualizer, Visualizer adds baseEntity to rootEntity
+    private var baseEntity: Entity // Entity managed by ARUnderstandingVisualizer, all visualizations are children of baseEntity
+    private var entities: [UUID: Entity] = [:]
+    @MainActor public init(entity: Entity) {
+        self.rootEntity = entity
+        self.baseEntity = Entity()
+        entity.addChild(baseEntity)
     }
     
-    public func handleNewSession() async {
-        await baseEntity.removeAllChildren()
+    @MainActor public func setEntity(_ entity: Entity) {
+        self.rootEntity = entity
+        // Migrate the visualizations to this new rootEntity by adding the baseEntity
+        entity.addChild(baseEntity)
     }
     
-    public func handleAnchor(_ anchor: CapturedAnchor) async {
-        await anchor.visualize(in: baseEntity)
+    public func findEntity(for anchor: CapturedAnchor) -> Entity? {
+        entities[anchor.id]
+    }
+    
+    public func handle(_ message: ARUnderstandingSession.Message) async {
+        switch message {
+        case .newSession:
+            await handleNewSession()
+        case .anchor(let capturedAnchor):
+            await handleAnchor(capturedAnchor)
+        case .authorizationDenied(let string):
+            break
+        case .trackingError(let string):
+            break
+        case .unknown:
+            break
+        }
+    }
+    
+    @MainActor public func handleNewSession() async {
+        entities.removeAll()
+        
+        // Clear out the old base entity
+        baseEntity.removeFromParent()
+        
+        // replace the base entity with a new one
+        baseEntity = Entity()
+        rootEntity.addChild(baseEntity)
+    }
+    
+    @MainActor public func handleAnchor(_ anchor: CapturedAnchor) async {
+        guard anchor.event != .removed else { return }
+        if let existing = entities[anchor.id] {
+            await anchor.visualize(in: existing, with: [anchor.defaultMaterial])
+        } else {
+            let entity = Entity()
+            entities[anchor.id] = entity
+            baseEntity.addChild(entity)
+            await anchor.visualize(in: entity, with: [anchor.defaultMaterial])
+        }
     }
 }
+#endif

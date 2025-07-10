@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import ARUnderstanding
 
 extension ARUnderstanding {
     public func record(outputName: String? = nil) async -> ARUnderstandingProvider {
@@ -34,13 +33,19 @@ extension AnchorRecorder {
         
         static func anchorUpdates(recorder: AnchorRecorder, source: AsyncStream<CapturedAnchor>) -> AsyncStream<CapturedAnchor> {
             AsyncStream { continuation in
-                Task {
+                let task = Task {
                     defer { continuation.finish() }
                     for await update in source {
                         continuation.yield(update)
                         Task {
                             await recorder.record(anchor: update)
                         }
+                    }
+                }
+                continuation.onTermination = { @Sendable termination in
+                    switch termination {
+                    case .cancelled: task.cancel()
+                    default: break
                     }
                 }
             }
@@ -52,13 +57,19 @@ extension AsyncStream where Element == CapturedAnchor {
     public func record(outputName: String? = nil) -> AsyncStream<CapturedAnchor> {
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
-            Task {
+            let task = Task {
                 defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
                         await recorder.record(anchor: anchor)
                     }
+                }
+            }
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
                 }
             }
         }
@@ -69,13 +80,19 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedHandAnchor> 
     public func record(outputName: String? = nil) -> AsyncStream<CapturedAnchorUpdate<CapturedHandAnchor>> {
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
-            Task {
+            let task = Task {
                 defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
                         await recorder.record(anchor: .hand(anchor))
                     }
+                }
+            }
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
                 }
             }
         }
@@ -86,13 +103,19 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedPlaneAnchor>
     public func record(outputName: String? = nil) -> AsyncStream<CapturedAnchorUpdate<CapturedPlaneAnchor>> {
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
-            Task {
+            let task = Task {
                 defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
                         await recorder.record(anchor: .plane(anchor))
                     }
+                }
+            }
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
                 }
             }
         }
@@ -103,13 +126,19 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedMeshAnchor> 
     public func record(outputName: String? = nil) -> AsyncStream<CapturedAnchorUpdate<CapturedMeshAnchor>> {
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
-            Task {
+            let task = Task {
                 defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
                         await recorder.record(anchor: .mesh(anchor))
                     }
+                }
+            }
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
                 }
             }
         }
@@ -120,13 +149,19 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedImageAnchor>
     public func record(outputName: String? = nil) -> AsyncStream<CapturedAnchorUpdate<CapturedImageAnchor>> {
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
-            Task {
+            let task = Task {
                 defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
                         await recorder.record(anchor: .image(anchor))
                     }
+                }
+            }
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
                 }
             }
         }
@@ -137,13 +172,19 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedDeviceAnchor
     public func record(outputName: String? = nil) -> AsyncStream<CapturedAnchorUpdate<CapturedDeviceAnchor>> {
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
-            Task {
+            let task = Task {
                 defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
                         await recorder.record(anchor: .device(anchor))
                     }
+                }
+            }
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
                 }
             }
         }
@@ -154,13 +195,19 @@ extension AsyncStream where Element == CapturedAnchorUpdate<CapturedWorldAnchor>
     public func record(outputName: String? = nil) -> AsyncStream<CapturedAnchorUpdate<CapturedWorldAnchor>> {
         AsyncStream { continuation in
             let recorder = AnchorRecorder(outputName: outputName)
-            Task {
+            let task = Task {
                 defer { continuation.finish() }
                 for await anchor in self {
                     continuation.yield(anchor)
                     Task {
                         await recorder.record(anchor: .world(anchor))
                     }
+                }
+            }
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
                 }
             }
         }

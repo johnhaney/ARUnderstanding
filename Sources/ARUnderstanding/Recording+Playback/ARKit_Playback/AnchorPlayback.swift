@@ -7,94 +7,133 @@
 
 import Foundation
 
-final public class AnchorPlayback: ARUnderstandingProvider, Sendable {
-    public let recording: AnchorRecording
-    
-    init(recording: AnchorRecording) {
-        self.recording = recording
-    }
-    
-    public init(fileName: String) {
-        var fileData: Data? = nil
-        do {
-            if let fileURL = Bundle.main.url(forResource: fileName, withExtension: "anchorsession") {
-                fileData = try Data(contentsOf: fileURL)
-            }
-        } catch {
-        }
+final public class AnchorPlayback: ARUnderstandingProvider, ARUnderstandingInput, Sendable {
+    private let fileURL: URL?
 
-        if fileData == nil {
-            do {
-                let documentURL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-                let fileURL = documentURL.appendingPathComponent("\(fileName).anchorsession", conformingTo: .arAnchorRecording)
-                
-                fileData = try Data(contentsOf: fileURL)
-            } catch {
-                logger.error("Error loading from \(fileName).anchorsession: \(error.localizedDescription)")
-            }
-        }
-        
-        guard let data = fileData else {
-            recording = AnchorRecording(records: [])
-            return
-        }
-        
-        do {
-            let records = try JSONDecoder().decode([CapturedAnchor].self, from: data)
-            recording = AnchorRecording(records: records)
-            logger.trace("Loaded \(records.count) records")
-        } catch {
-            logger.error("Error loading from \(fileName).anchorsession: \(error.localizedDescription)")
-            recording = AnchorRecording(records: [])
-        }
+    public init(fileName: String) {
+        self.fileURL = Bundle.main.url(forResource: fileName, withExtension: "anchorsession")
     }
     
-//    public func compactMap<T>(_ action: @escaping (CapturedAnchor) -> T?) -> AsyncStream<T> {
-//        AsyncStream { continuation in
-//            Task { @MainActor in
-//                repeat {
-//                    let events = self.recording.records
-//                    let start = Date()
-//                    var firstTimestamp: TimeInterval?
-//                    for event in events {
-//                        let offset = event.timestamp - (firstTimestamp ?? event.timestamp)
-//                        firstTimestamp = firstTimestamp ?? event.timestamp
-//                        while offset > Date().timeIntervalSince(start) {
-//                            try? await Task.sleep(for: .seconds(offset - Date().timeIntervalSince(start)))
-//                        }
-//                        if let value = action(event) {
-//                            continuation.yield(value)
-//                        }
-//                    }
-//                    if loop {
-//                        try? await Task.sleep(for: .seconds(1))
-//                    }
-//                } while loop == true
-//                continuation.finish()
-//            }
-//        }
-//    }
+    public init(url: URL) {
+        self.fileURL = url
+    }
     
-    public var anchorUpdates: AsyncStream<CapturedAnchor> {
+    private static func fileURL(outputName: String) throws -> URL {
+        let documentURL = try FileManager.default.url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        let fileURL = documentURL.appendingPathComponent("\(outputName).anchorsession", conformingTo: .arAnchorRecording)
+        return fileURL
+    }
+
+    public var messages: AsyncStream<ARUnderstandingSession.Message> {
         AsyncStream { continuation in
-            let events = recording.records
-            Task {
-                repeat {
-                    let start = Date()
-                    var firstTimestamp: TimeInterval?
-                    for event in events {
-                        let offset = event.timestamp - (firstTimestamp ?? event.timestamp)
-                        firstTimestamp = firstTimestamp ?? event.timestamp
-                        while offset > Date().timeIntervalSince(start) {
-                            try? await Task.sleep(for: .seconds(offset - Date().timeIntervalSince(start)))
-                        }
-                        continuation.yield(event)
+            if let fileURL {
+                let task: Task<(), Never> = Task.detached {
+                    defer {
+                        continuation.finish()
                     }
-                    try? await Task.sleep(for: .seconds(1))
-                } while true
+                    continuation.yield(ARUnderstandingSession.Message.newSession)
+                    repeat {
+                        if let reader = BinaryReader<CapturedAnchor>(fileURL: fileURL) {
+                            let start = Date()
+                            var firstTimestampSaved: TimeInterval?
+                            var item = 0
+                            for await event in reader.objects() {
+                                item += 1
+                                let firstTimestamp: TimeInterval
+                                if let firstTimestampSaved {
+                                    firstTimestamp = firstTimestampSaved
+                                } else {
+                                    firstTimestampSaved = event.timestamp
+                                    firstTimestamp = event.timestamp
+                                }
+                                let offset = event.timestamp - firstTimestamp
+                                let startOffset = Date().timeIntervalSince(start)
+                                if offset > startOffset {
+                                    try? await Task.sleep(for: .milliseconds(Int((offset - startOffset)*1000)))
+                                }
+                                do {
+                                    var shouldStop = false
+                                    switch continuation.yield(ARUnderstandingSession.Message.anchor(event)) {
+                                    case .terminated:
+                                        shouldStop = true
+                                    case .dropped: break
+                                    case .enqueued: break
+                                    @unknown default: break
+                                    }
+                                    
+                                    if shouldStop {
+                                        break
+                                    }
+                                }
+                            }
+                        }
+                        try? await Task.sleep(for: .seconds(1))
+                    } while !Task.isCancelled
+                }
+                continuation.onTermination = { @Sendable termination in
+                    switch termination {
+                    case .cancelled:
+                        task.cancel()
+                    default: break
+                    }
+                }
+            } else {
                 continuation.finish()
             }
         }
     }
+    
+    public var anchorUpdates: AsyncStream<CapturedAnchor> {
+        AsyncStream { continuation in
+            guard let fileURL,
+                  let reader = BinaryReader<CapturedAnchor>(fileURL: fileURL)
+            else {
+                continuation.finish()
+                return
+            }
+            let task = Task {
+                defer { continuation.finish() }
+                repeat {
+                    let start = Date()
+                    var firstTimestamp: TimeInterval?
+                    for await event in reader.objects() {
+                        let offset = event.timestamp - (firstTimestamp ?? event.timestamp)
+                        firstTimestamp = firstTimestamp ?? event.timestamp
+                        while offset > -start.timeIntervalSinceNow {
+                            try? await Task.sleep(for: .seconds(offset + start.timeIntervalSinceNow))
+                        }
+                        continuation.yield(event)
+                    }
+                    try? await Task.sleep(for: .seconds(1))
+                } while !Task.isCancelled
+            }
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
+            }
+        }
+    }
+    
+    public func queryDeviceAnchor(atTimestamp timestamp: TimeInterval) -> CapturedDeviceAnchor? {
+        guard let fileURL,
+              let reader = BinaryReader<CapturedAnchor>(fileURL: fileURL)
+        else { return nil }
+        
+        var firstTimestamp: TimeInterval?
+        var lastDeviceAnchor: CapturedDeviceAnchor? = nil
+        
+        try? reader.iterate { (event, stop) in
+            let offset = event.timestamp - (firstTimestamp ?? event.timestamp)
+            firstTimestamp = firstTimestamp ?? event.timestamp
+            if offset > timestamp {
+                stop = true
+            } else if case let .device(update) = event {
+                lastDeviceAnchor = update.anchor
+            }
+        }
+        
+        return lastDeviceAnchor
+    }
 }
-
