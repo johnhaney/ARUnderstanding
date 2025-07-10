@@ -8,7 +8,9 @@
 #if canImport(ARKit)
 @_exported import ARKit
 #endif
+#if canImport(RealityKit)
 @_exported import RealityKit
+#endif
 import OSLog
 
 @Observable
@@ -19,13 +21,23 @@ public class ARUnderstanding {
     
     // Private
     private let logger: Logger
-    private(set) var providers: [ARProviderDefinition]
-    static let session: ARUnderstandingSession = ARUnderstandingSession()
+    public static let session: ARUnderstandingSession = ARUnderstandingSession()
 
+    private(set) var providers: [ARProviderDefinition]
+    
+    #if os(visionOS) || os(iOS)
+    @available(visionOS, introduced: 2.0)
+    @available(iOS, introduced: 18.0)
     public init(providers: [ARProviderDefinition], logger: Logger = Logger(subsystem: "com.appsyoucanmake.ARUnderstanding", category: "general")) {
         self.providers = providers
         self.logger = logger
     }
+    #else
+    private init(logger: Logger = Logger(subsystem: "com.appsyoucanmake.ARUnderstanding", category: "general")) {
+        self.providers = []
+        self.logger = logger
+    }
+    #endif
     
     public var anchorUpdates: AsyncStream<CapturedAnchor> {
         AsyncStream { continuation in
@@ -46,7 +58,12 @@ public class ARUnderstanding {
     private func ensureSessionIsRunning() {
         guard !Self.session.isRunning else { return }
         
-        Self.session.add(input: ARUnderstandingLiveInput(providers: providers, logger: logger))
+        #if os(visionOS) || os(iOS)
+        if #available(visionOS 2.0, iOS 18.0, *) {
+            Self.session.add(input: ARUnderstandingLiveInput(providers: providers, logger: logger))
+        }
+        #endif
+
         Self.session.start()
     }
 }

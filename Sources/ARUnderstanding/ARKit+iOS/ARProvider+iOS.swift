@@ -10,6 +10,8 @@ import ARKit
 import Foundation
 import RealityKit
 
+@available(macCatalyst, unavailable)
+@available(iOS, introduced: 18.0)
 public enum ARProvider {
     case device(DeviceTrackingProvider)
     case face(FaceTrackingProvider)
@@ -41,6 +43,8 @@ public enum QueryDeviceAnchor {
     case none
 }
 
+@available(macCatalyst, unavailable)
+@available(iOS, introduced: 18.0)
 extension ARProvider {
     var anchorCapabilities: Set<SpatialTrackingSession.Configuration.AnchorCapability> {
         self.dataProvider.anchorCapabilities
@@ -51,6 +55,8 @@ extension ARProvider {
     }
 }
 
+@available(macCatalyst, unavailable)
+@available(iOS, introduced: 18.0)
 extension ARProviderDefinition {
     var provider: ARProvider {
         switch self {
@@ -80,6 +86,8 @@ extension ARProviderDefinition {
     }
 }
 
+@available(macCatalyst, unavailable)
+@available(iOS, introduced: 18.0)
 extension ARProvider {
     func matches(rhs: ARProvider) -> Bool {
         switch (self, rhs) {

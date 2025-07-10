@@ -9,7 +9,9 @@ import Foundation
 #if canImport(ARKit)
 import ARKit
 #endif
+#if canImport(RealityKit)
 import RealityKit
+#endif
 
 public protocol CapturableAnchor: Anchor, Hashable {
     associatedtype CapturedType: Anchor & Hashable

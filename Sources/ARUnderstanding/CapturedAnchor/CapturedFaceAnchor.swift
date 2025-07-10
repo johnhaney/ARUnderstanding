@@ -9,7 +9,10 @@ import Foundation
 #if canImport(ARKit)
 import ARKit
 #endif
+#if canImport(RealityKit)
 import RealityKit
+#endif
+import simd
 
 public protocol FaceAnchorRepresentable: CapturableAnchor {
     associatedtype BlendShapeLocation: BlendShapeLocationRepresentable

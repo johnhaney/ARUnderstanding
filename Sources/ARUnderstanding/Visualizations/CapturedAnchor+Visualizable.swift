@@ -9,12 +9,21 @@ import Foundation
 #if canImport(ARKit)
 import ARKit
 #endif
+#if canImport(RealityKit)
 import RealityKit
 
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
 protocol Visualizable {
     @MainActor func visualize(in: Entity, with materials: [Material]) async
 }
 
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
 extension CapturedAnchor: Visualizable {
     struct CapturedAnchorVisualizedComponent: Component {
         let anchor: CapturedAnchor
@@ -83,8 +92,13 @@ extension CapturedAnchor: Visualizable {
     }
 }
 
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
 extension CapturedAnchorUpdate: Visualizable where AnchorType: Visualizable {
     func visualize(in rootEntity: Entity, with materials: [any Material]) async {
         await anchor.visualize(in: rootEntity, with: materials)
     }
 }
+#endif

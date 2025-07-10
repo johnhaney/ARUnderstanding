@@ -8,8 +8,13 @@
 #if canImport(ARKit)
 import ARKit
 #endif
+#if canImport(RealityKit)
 import RealityKit
 
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
 extension CapturedMeshAnchor: Visualizable {
     @MainActor public func visualize(in rootEntity: Entity, with materials: [Material]) async {
         if await visualizeInPlace(in: rootEntity, with: materials) {
@@ -43,8 +48,13 @@ extension CapturedMeshAnchor: Visualizable {
     }
 }
 
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
 extension MeshAnchorRepresentable {
     func mesh(name: String) async -> MeshResource? {
         await geometry.mesh.mesh(name: name)
     }
 }
+#endif

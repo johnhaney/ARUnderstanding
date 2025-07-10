@@ -7,8 +7,11 @@ let package = Package(
     name: "ARUnderstanding",
     platforms: [
         .visionOS(.v2),
-        .iOS(.v18),
+        .iOS(.v17),
+        .macCatalyst(.v17),
         .macOS(.v15),
+        .tvOS(.v17),
+        .watchOS(.v10),
     ],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.

@@ -7,7 +7,9 @@
 
 import Foundation
 
+#if canImport(RealityKit)
 import RealityKit
+#endif
 import simd
 #if canImport(ARKit)
 import ARKit

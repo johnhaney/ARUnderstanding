@@ -8,9 +8,14 @@
 #if canImport(ARKit)
 import ARKit
 #endif
+#if canImport(RealityKit)
 import RealityKit
 import Spatial
 
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
 extension CapturedHandAnchor: Visualizable {
     struct CapturedHandComponent: Component {
         let entities: [JointName: Entity]
@@ -90,3 +95,4 @@ extension HandSkeleton.JointName {
         case decodingError
     }
 }
+#endif

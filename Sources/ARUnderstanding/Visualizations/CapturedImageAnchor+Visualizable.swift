@@ -8,8 +8,13 @@
 #if canImport(ARKit)
 import ARKit
 #endif
+#if canImport(RealityKit)
 import RealityKit
 
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
 extension CapturedImageAnchor: Visualizable {
     @MainActor public func visualize(in rootEntity: Entity, with materials: [Material]) async {
         rootEntity.transform = Transform(matrix: self.originFromAnchorTransform)
@@ -21,3 +26,4 @@ extension CapturedImageAnchor: Visualizable {
         rootEntity.transform.scale = SIMD3<Float>(x: estimatedPhysicalWidth, y: estimatedPhysicalHeight, z: 1)
     }
 }
+#endif

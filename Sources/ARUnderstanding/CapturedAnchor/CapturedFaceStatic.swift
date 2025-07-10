@@ -1,5 +1,8 @@
 import Foundation
+#if canImport(RealityKit)
 import RealityKit
+#endif
+import simd
 
 internal struct CapturedFaceStatic {
     static var textureCoordinates: [vector_float2] {

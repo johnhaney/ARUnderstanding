@@ -9,7 +9,11 @@
 
 #if !os(visionOS)
 import Foundation
+#if canImport(RealityKit)
 import RealityKit
+#endif
+import simd
+import OSLog
 
 public protocol Anchor: Sendable, Equatable, Identifiable, Hashable {
     var id: UUID { get }
@@ -38,6 +42,18 @@ public protocol TrackableAnchor: Anchor {
 extension CapturedAnchorUpdate {
     var captured: Self { self }
 }
+
+#if os(visionOS) || os(iOS)
+#else
+public enum ARProviderDefinition: Equatable {}
+struct ARUnderstandingLiveInput: ARUnderstandingInput {
+    init(providers: [ARProviderDefinition], logger: Logger) {}
+    
+    var messages: AsyncStream<ARUnderstandingSession.Message> {
+        AsyncStream { $0.finish() }
+    }
+}
+#endif
 
 #if !canImport(ARKit)
 //final public class HandTrackingProvider: DataProvider,  HandTrackingProviderRepresentable, Sendable {
