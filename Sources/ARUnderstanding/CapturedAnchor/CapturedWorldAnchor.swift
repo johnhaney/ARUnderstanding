@@ -9,7 +9,10 @@
 import ARKit
 #endif
 import Foundation
+#if canImport(RealityKit)
 import RealityKit
+#endif
+import simd
 
 public protocol WorldAnchorRepresentable: CapturableAnchor, TrackableAnchor {
     var originFromAnchorTransform: simd_float4x4 { get }

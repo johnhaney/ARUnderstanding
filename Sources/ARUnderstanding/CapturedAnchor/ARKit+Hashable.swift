@@ -5,11 +5,7 @@
 //  Created by John Haney on 3/1/25.
 //
 
-#if canImport(ARKit)
-import ARKit
-#else
-import RealityKit
-#endif
+import simd
 
 extension simd_float4x4: @retroactive Hashable {
     public func hash(into hasher: inout Hasher) {

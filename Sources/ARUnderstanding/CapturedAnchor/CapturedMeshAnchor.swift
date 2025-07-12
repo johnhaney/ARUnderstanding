@@ -5,19 +5,31 @@
 //  Created by John Haney on 4/13/24.
 //
 
+import Foundation
 #if os(visionOS)
 import ARKit
-#else
-import Foundation
 #endif
+#if canImport(RealityKit)
 import RealityKit
+#endif
+import simd
 
 public protocol MeshAnchorRepresentable: CapturableAnchor {
     associatedtype Geometry: MeshAnchorGeometryRepresentable
     var geometry: Geometry { get }
     var originFromAnchorTransform: simd_float4x4 { get }
     var id: UUID { get }
+}
+
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
+@available(watchOS, unavailable)
+public protocol MeshAnchorRKRepresentable: MeshAnchorRepresentable {
+    #if os(visionOS) || os(iOS) || os(macOS) || os(tvOS)
     func shape() async throws -> ShapeResource
+    #endif
 }
 
 extension MeshAnchorRepresentable {
@@ -119,10 +131,19 @@ public struct CapturedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
         }
 #endif
     }
-    
+}
+
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
+@available(watchOS, unavailable)
+extension CapturedMeshAnchor: MeshAnchorRKRepresentable {
+    #if os(visionOS) || os(iOS) || os(macOS) || os(tvOS)
     public func shape() async throws -> ShapeResource {
         try await geometry.mesh.shape()
     }
+    #endif
 }
 
 public struct SavedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
@@ -139,17 +160,33 @@ public struct SavedMeshAnchor: Anchor, MeshAnchorRepresentable, Sendable {
         self._geometry = { geometry }
         self._description = { description }
     }
-    
+}
+
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
+@available(watchOS, unavailable)
+extension SavedMeshAnchor: MeshAnchorRKRepresentable {
+    #if os(visionOS) || os(iOS) || os(macOS) || os(tvOS)
     public func shape() async throws -> ShapeResource {
         try await geometry.mesh.shape()
     }
+    #endif
 }
 
+#if os(visionOS) || os(iOS) || os(macOS) || os(tvOS)
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
+@available(watchOS, unavailable)
 extension ShapeResource {
-    static func generateStaticMesh(from: any MeshAnchorRepresentable) async throws -> ShapeResource {
+    static func generateStaticMesh(from: any MeshAnchorRKRepresentable) async throws -> ShapeResource {
         return try await from.shape()
     }
 }
+#endif
 
 public struct CapturedMeshGeometry: Sendable {
     let vertices: [SIMD3<Float>]
@@ -195,6 +232,12 @@ public struct CapturedMeshGeometry: Sendable {
     }
     #endif
     
+    #if os(visionOS) || os(iOS) || os(macOS) || os(tvOS)
+    @available(visionOS, introduced: 2.0)
+    @available(iOS, introduced: 18.0)
+    @available(tvOS, introduced: 26.0)
+    @available(macOS, introduced: 15.0)
+    @available(watchOS, unavailable)
     func mesh(name: String) async -> MeshResource? {
         var mesh = MeshDescriptor(name: name)
         let faces = triangles.flatMap({ $0 })
@@ -216,13 +259,21 @@ public struct CapturedMeshGeometry: Sendable {
             return nil
         }
     }
-    
+    #endif
+
+    #if os(visionOS) || os(iOS) || os(macOS) || os(tvOS)
+    @available(visionOS, introduced: 2.0)
+    @available(iOS, introduced: 18.0)
+    @available(tvOS, introduced: 26.0)
+    @available(macOS, introduced: 15.0)
+    @available(watchOS, unavailable)
     func shape() async throws -> ShapeResource {
         try await ShapeResource.generateStaticMesh(
             positions: vertices,
             faceIndices: triangles.flatMap({ $0 }).map(UInt16.init)
         )
     }
+    #endif
 }
 
 extension MeshAnchorRepresentable {

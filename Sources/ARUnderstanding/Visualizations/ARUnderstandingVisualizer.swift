@@ -10,7 +10,10 @@ import Foundation
 import SwiftUI
 import RealityKit
 
-@Observable
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
 public class ARUnderstandingVisualizer: ARUnderstandingOutput {
     private var rootEntity: Entity // Entity provided to Visualizer, Visualizer adds baseEntity to rootEntity
     private var baseEntity: Entity // Entity managed by ARUnderstandingVisualizer, all visualizations are children of baseEntity

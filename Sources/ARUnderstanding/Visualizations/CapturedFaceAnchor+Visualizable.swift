@@ -8,8 +8,13 @@
 #if canImport(ARKit)
 import ARKit
 #endif
+#if canImport(RealityKit)
 import RealityKit
 
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
 extension CapturedFaceAnchor: Visualizable {
     @MainActor public func visualize(in rootEntity: Entity, with materials: [Material]) async {
         rootEntity.transform = Transform(matrix: self.originFromAnchorTransform)
@@ -24,6 +29,10 @@ extension CapturedFaceAnchor: Visualizable {
 
 #warning("TODO: Implement mesh generation maybe")
 
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
 extension FaceAnchorRepresentable {
     func mesh(name: String) async -> MeshResource? {
         let mesh = await MeshResource.generateBox(width: 0.14, height: 0.22, depth: 0.14, cornerRadius: 0.02)
@@ -122,4 +131,5 @@ extension ARFaceAnchor.BlendShapeLocation {
         }
     }
 }
+#endif
 #endif

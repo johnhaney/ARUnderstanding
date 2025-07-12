@@ -6,7 +6,10 @@
 //
 
 import Foundation
+#if canImport(RealityKit)
 import RealityKit
+#endif
+import simd
 
 extension CapturedFaceAnchor: PackEncodable {
     public func pack() throws -> Data {

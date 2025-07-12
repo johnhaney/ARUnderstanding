@@ -6,7 +6,9 @@
 //
 
 import Foundation
+#if canImport(RealityKit)
 import RealityKit
+#endif
 
 extension Float: PackEncodable {
     public func pack() throws -> Data {

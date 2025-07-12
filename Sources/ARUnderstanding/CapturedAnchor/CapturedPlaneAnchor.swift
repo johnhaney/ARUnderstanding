@@ -9,7 +9,10 @@
 import ARKit
 #endif
 import Foundation
+#if canImport(RealityKit)
 import RealityKit
+#endif
+import simd
 
 public protocol PlaneAnchorRepresentable: CapturableAnchor {
     associatedtype Geometry: PlaneAnchorGeometryRepresentable
@@ -184,6 +187,12 @@ public struct CapturedPlaneMeshGeometry: Sendable {
         #endif
     }
     
+    #if os(visionOS) || os(iOS) || os(macOS) || os(tvOS)
+    @available(visionOS, introduced: 2.0)
+    @available(iOS, introduced: 18.0)
+    @available(tvOS, introduced: 26.0)
+    @available(macOS, introduced: 15.0)
+    @available(watchOS, unavailable)
     func mesh(name: String) async -> MeshResource? {
         var mesh = MeshDescriptor(name: "")
         let faces = triangles.flatMap({ $0 })
@@ -202,6 +211,7 @@ public struct CapturedPlaneMeshGeometry: Sendable {
             return nil
         }
     }
+    #endif
 }
 
 #if os(visionOS)

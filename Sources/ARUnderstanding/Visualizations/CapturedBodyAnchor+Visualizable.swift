@@ -1,5 +1,5 @@
 //
-//  File.swift
+//  CapturedBodyAnchor+Visualizable.swift
 //  ARUnderstanding
 //
 //  Created by John Haney on 3/5/25.
@@ -8,9 +8,14 @@
 #if canImport(ARKit)
 import ARKit
 #endif
+#if canImport(RealityKit)
 import RealityKit
 import Spatial
 
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
 extension CapturedBodyAnchor: Visualizable {
     struct CapturedBodyComponent: Component {
         let rootEntity: Entity
@@ -82,3 +87,4 @@ extension CapturedBodyAnchor: Visualizable {
         }
     }
 }
+#endif

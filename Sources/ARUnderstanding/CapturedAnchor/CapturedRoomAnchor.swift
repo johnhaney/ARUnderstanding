@@ -9,7 +9,10 @@
 import ARKit
 #endif
 import Foundation
+#if canImport(RealityKit)
 import RealityKit
+#endif
+import simd
 
 public protocol RoomAnchorRepresentable: CapturableAnchor {
     associatedtype Geometry: MeshAnchorGeometryRepresentable
@@ -132,11 +135,20 @@ public struct CapturedRoomAnchor: Anchor, RoomAnchorRepresentable, Sendable {
         }
 #endif
     }
-    
+}
+
+#if os(visionOS) || os(iOS) || os(macOS) || os(tvOS)
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
+@available(watchOS, unavailable)
+extension CapturedRoomAnchor {
     public func shape() async throws -> ShapeResource {
         try await geometry.mesh.shape()
     }
 }
+#endif
 
 extension CapturedMeshGeometry: MeshAnchorGeometryRepresentable {
     public var mesh: CapturedMeshGeometry {

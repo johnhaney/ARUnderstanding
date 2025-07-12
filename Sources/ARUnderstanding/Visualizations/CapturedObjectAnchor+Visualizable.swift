@@ -5,11 +5,13 @@
 //  Created by John Haney on 2/10/25.
 //
 
-#if canImport(ARKit)
-import ARKit
-#endif
+#if canImport(RealityKit)
 import RealityKit
 
+@available(visionOS, introduced: 2.0)
+@available(iOS, introduced: 18.0)
+@available(tvOS, introduced: 26.0)
+@available(macOS, introduced: 15.0)
 extension CapturedObjectAnchor: Visualizable {
     @MainActor public func visualize(in rootEntity: Entity, with materials: [Material]) async {
         rootEntity.transform = Transform(matrix: self.originFromAnchorTransform)
@@ -20,3 +22,4 @@ extension CapturedObjectAnchor: Visualizable {
         }
     }
 }
+#endif

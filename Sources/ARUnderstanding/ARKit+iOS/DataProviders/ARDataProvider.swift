@@ -10,6 +10,8 @@ import Foundation
 import ARKit
 import RealityKit
 
+@available(macCatalyst, unavailable)
+@available(iOS, introduced: 18.0)
 protocol ARDataProvider: DataProvider {
     // Configure for SpatialTrackingSession
     var anchorCapabilities: Set<SpatialTrackingSession.Configuration.AnchorCapability> { get }
@@ -20,12 +22,16 @@ protocol ARDataProvider: DataProvider {
     func configure(_ configuration: inout ARBodyTrackingConfiguration)
 }
 
+@available(macCatalyst, unavailable)
+@available(iOS, introduced: 18.0)
 protocol AnchorCapturingDataProvider: ARDataProvider {
     associatedtype AnchorType: ARAnchor
     // do capture per anchor
     func capture(anchor: AnchorType, timestamp: TimeInterval, event: CapturedAnchorEvent) -> CapturedAnchor?
 }
 
+@available(macCatalyst, unavailable)
+@available(iOS, introduced: 18.0)
 extension AnchorCapturingDataProvider {
     func session(_ session: ARSession, didAdd anchors: [ARAnchor], _ continuation: AsyncStream<ARUnderstandingSession.Message>.Continuation?) {
         guard let continuation else { return }
@@ -67,11 +73,15 @@ extension AnchorCapturingDataProvider {
     }
 }
 
+@available(macCatalyst, unavailable)
+@available(iOS, introduced: 18.0)
 protocol FrameCapturingDataProvider: ARDataProvider {
     // Compute any anchors per frame
     func capture(session: ARSession, frame: ARFrame) -> [CapturedAnchor]
 }
 
+@available(macCatalyst, unavailable)
+@available(iOS, introduced: 18.0)
 extension FrameCapturingDataProvider {
     func session(_ session: ARSession, didUpdate frame: ARFrame, _ continuation: AsyncStream<ARUnderstandingSession.Message>.Continuation?) {
         guard let continuation else { return }
@@ -82,6 +92,8 @@ extension FrameCapturingDataProvider {
     }
 }
 
+@available(macCatalyst, unavailable)
+@available(iOS, introduced: 18.0)
 extension ARDataProvider {
     func configure(_ configuration: inout ARWorldTrackingConfiguration) {}
     func configure(_ configuration: inout ARBodyTrackingConfiguration) {}

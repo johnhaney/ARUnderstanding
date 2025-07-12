@@ -5,12 +5,14 @@
 //  Created by John Haney on 2/10/25.
 //
 
+import Foundation
 #if canImport(ARKit)
 import ARKit
-#else
-import Foundation
+#endif
+#if canImport(RealityKit)
 import RealityKit
 #endif
+import simd
 
 public protocol ObjectAnchorRepresentable: CapturableAnchor {
     var originFromAnchorTransform: simd_float4x4 { get }

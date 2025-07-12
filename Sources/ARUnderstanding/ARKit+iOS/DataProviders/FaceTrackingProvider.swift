@@ -10,6 +10,8 @@ import Foundation
 import ARKit
 import RealityKit
 
+@available(macCatalyst, unavailable)
+@available(iOS, introduced: 18.0)
 final public class FaceTrackingProvider: AnchorCapturingDataProvider {
     typealias AnchorType = ARFaceAnchor
     

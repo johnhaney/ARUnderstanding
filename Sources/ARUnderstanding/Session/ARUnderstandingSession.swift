@@ -1,12 +1,14 @@
 //
-//  File.swift
+//  ARUnderstandingSession.swift
 //  ARUnderstanding
 //
 //  Created by John Haney on 2/16/25.
 //
 
 import Foundation
+#if canImport(RealityKit)
 import RealityKit
+#endif
 import Combine
 import OSLog
 
@@ -88,6 +90,12 @@ public class ARUnderstandingSession {
     
     /// Adds (or replaces) a set of inputs using ARUnderstanding providers specified
     /// - Parameter providers: list of ARProviderDefinition choices (ex. [.device, .mesh, .planes])
+    @available(visionOS, introduced: 2.0)
+    @available(iOS, introduced: 18.0)
+    @available(macOS, unavailable)
+    @available(tvOS, unavailable)
+    @available(watchOS, unavailable)
+    @available(macCatalyst, unavailable)
     @MainActor public func addUnderstanding(_ providers: [ARProviderDefinition]) {
         let understanding = ARUnderstandingLiveInput(providers: providers, logger: logger)
         add(input: understanding, named: "ARUnderstanding")
@@ -165,15 +173,6 @@ public class ARUnderstandingSession {
         stop()
         inputs.removeAll()
         outputs.removeAll()
-    }
-}
-
-extension Entity {
-    func removeAllChildren() async {
-        let children = Array(self.children)
-        for child in children {
-            child.removeFromParent()
-        }
     }
 }
 

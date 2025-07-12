@@ -9,7 +9,10 @@ import Foundation
 #if canImport(ARKit)
 import ARKit
 #endif
+#if canImport(RealityKit)
 import RealityKit
+#endif
+import simd
 
 protocol ARAnchorRepresentable {
     var identifier: UUID { get }

@@ -11,6 +11,10 @@ import ARKit
 extension ARMeshAnchor: MeshAnchorRepresentable {
     public var originFromAnchorTransform: simd_float4x4 { transform }
     public var id: UUID { identifier }
+}
+
+@available(iOS 18.0, *)
+extension ARMeshAnchor: MeshAnchorRKRepresentable {
     public func shape() async throws -> ShapeResource {
         try await geometry.mesh.shape()
     }

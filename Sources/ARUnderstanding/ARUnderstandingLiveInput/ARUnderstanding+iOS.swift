@@ -22,25 +22,35 @@ struct ARUnderstandingLiveInput: ARUnderstandingInput {
 
     var messages: AsyncStream<ARUnderstandingSession.Message> {
         AsyncStream<ARUnderstandingSession.Message> { continuation in
+            #if targetEnvironment(macCatalyst)
+            continuation.finish()
+            #else
             guard !providers.isEmpty
             else {
                 continuation.finish()
                 return
             }
-            
-            let providers = self.providers
-            Task {
-                do {
-                    continuation.yield(ARUnderstandingSession.Message.newSession)
-                    try await Self.runSession(providers: providers, logger: logger, continuation)
-                } catch {
-                    logger.error("Error running session: \(error.localizedDescription)")
-                    continuation.finish()
+                
+            if #available(iOS 18.0, *) {
+                let providers = self.providers
+                Task {
+                    do {
+                        continuation.yield(ARUnderstandingSession.Message.newSession)
+                        try await Self.runSession(providers: providers, logger: logger, continuation)
+                    } catch {
+                        logger.error("Error running session: \(error.localizedDescription)")
+                        continuation.finish()
+                    }
                 }
+            } else {
+                continuation.finish()
             }
+            #endif
         }
     }
     
+    #if !targetEnvironment(macCatalyst)
+    @available(iOS 18.0, *)
     @MainActor private static func runSession(providers providerDefinitions: [ARProviderDefinition], logger: Logger, _ continuation: AsyncStream<ARUnderstandingSession.Message>.Continuation) async {
         logger.debug("ARU LiveInput: Run session...")
         let providers = providerDefinitions.map(\.provider)
@@ -73,6 +83,7 @@ struct ARUnderstandingLiveInput: ARUnderstandingInput {
         }
     }
     
+    @available(iOS 18.0, *)
     private static func configuration(_ providers: [ARProvider]) -> ARConfiguration {
         switch (providers.count, providers.first) {
         case (1, .body):
@@ -82,6 +93,7 @@ struct ARUnderstandingLiveInput: ARUnderstandingInput {
         }
     }
     
+    @available(iOS 18.0, *)
     private static func bodyConfiguration(_ providers: [ARProvider]) -> ARBodyTrackingConfiguration {
         var bodyConfig = ARBodyTrackingConfiguration()
         for provider in providers {
@@ -90,6 +102,7 @@ struct ARUnderstandingLiveInput: ARUnderstandingInput {
         return bodyConfig
     }
     
+    @available(iOS 18.0, *)
     private static func worldConfiguration(_ providers: [ARProvider]) -> ARWorldTrackingConfiguration {
         var worldConfig = ARWorldTrackingConfiguration()
         for provider in providers {
@@ -98,13 +111,17 @@ struct ARUnderstandingLiveInput: ARUnderstandingInput {
         return worldConfig
     }
     
+    @available(iOS 18.0, *)
     private static func stopSession(session: SpatialTrackingSession, arSession: ARSession) async throws {
         try? await session.stop()
         arSession.delegate = nil
         arSession.pause()
     }
+    #endif
 }
 
+@available(macCatalyst, unavailable)
+@available(iOS, introduced: 18.0)
 class LiveARDelegate: NSObject, ARSessionDelegate {
     let providers: [any ARDataProvider]
     var continuation: AsyncStream<ARUnderstandingSession.Message>.Continuation?

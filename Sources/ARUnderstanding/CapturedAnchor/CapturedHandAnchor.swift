@@ -5,13 +5,14 @@
 //  Created by John Haney on 4/13/24.
 //
 
-import simd
+import Foundation
 #if canImport(ARKit)
 import ARKit
-#else
-import Foundation
+#endif
+#if canImport(RealityKit)
 import RealityKit
 #endif
+import simd
 
 public protocol HandAnchorRepresentable: CapturableAnchor, Hashable {
     associatedtype HandSkeletonType: HandSkeletonRepresentable
