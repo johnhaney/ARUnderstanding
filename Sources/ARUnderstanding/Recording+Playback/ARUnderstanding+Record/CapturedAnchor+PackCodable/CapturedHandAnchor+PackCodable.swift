@@ -25,14 +25,28 @@ extension HandAnchorRepresentable {
         }
         var output: Data = Data()
         output.append(try id.pack())
-        let chiralityByte: UInt8
+        let fidelity: HandAnchor.Fidelity26
+        if #available(visionOS 26.0, *) {
+            fidelity = (self as? (any HandAnchor26Representable))?.fidelity.fidelity26 ?? .high
+        } else {
+            fidelity = .high
+        }
+        let chiralityBit: UInt8
         switch chirality {
         case .left:
-            chiralityByte = 1 // 0x01
+            chiralityBit = 0b001
         case .right:
-            chiralityByte = 2 // 0x10
+            chiralityBit = 0b010
         }
-        output.append(contentsOf: [chiralityByte])
+        let fidelityBit: UInt8
+        switch fidelity {
+        case .nominal:
+            fidelityBit = 0b100
+        case .high:
+            fidelityBit = 0b000
+        }
+        let chiralityFidelityByte: UInt8 = chiralityBit | fidelityBit
+        output.append(contentsOf: [chiralityFidelityByte])
         output.append(try originFromAnchorTransform.pack())
         output.append(try handSkeleton.pack())
         return output
@@ -170,9 +184,15 @@ extension CapturedHandAnchor: PackDecodable {
         }
         let (id, consumed) = try UUID.unpack(data: data)
         var offset = consumed
-        // Read as a bitmask to allow for future expansion of this byte
-        let chirality: HandAnchor.Chirality = (data[data.startIndex + offset] & 0x01 == 0x01) ? .left : .right
+        let chirality: HandAnchor.Chirality
+        let fidelity26: HandAnchor.Fidelity26
+        
+        let chiralityFidelityByte: UInt8 = data[data.startIndex + offset]
         offset += 1
+        
+        chirality = ((chiralityFidelityByte & 0b001) == 0b001) ? .left : .right
+        fidelity26 = ((chiralityFidelityByte & 0b100) == 0b100) ? .nominal : .high
+        
         let originFromAnchorTransform: simd_float4x4
         do {
             let (transform, consumed) = try simd_float4x4.unpack(data: data[(data.startIndex + offset)...])
@@ -190,6 +210,7 @@ extension CapturedHandAnchor: PackDecodable {
             CapturedHandAnchor(
                 id: id,
                 chirality: chirality,
+                fidelity26: fidelity26,
                 handSkeleton: skeleton,
                 isTracked: true,
                 originFromAnchorTransform: originFromAnchorTransform

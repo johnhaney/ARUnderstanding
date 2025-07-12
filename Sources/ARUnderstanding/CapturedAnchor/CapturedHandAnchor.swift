@@ -23,6 +23,11 @@ public protocol HandAnchorRepresentable: CapturableAnchor, Hashable {
     var originFromAnchorTransform: simd_float4x4 { get }
 }
 
+@available(visionOS 26.0, *)
+public protocol HandAnchor26Representable: HandAnchorRepresentable {
+    var fidelity: HandAnchor.Fidelity { get }
+}
+
 extension HandAnchorRepresentable {
     var capturedHandSkeleton: CapturedHandSkeleton? {
         handSkeleton?.captured
@@ -50,6 +55,7 @@ public struct CapturedHandAnchor: CapturableAnchor, HandAnchorRepresentable, Sen
     
     public let id: UUID
     public let chirality: HandAnchor.Chirality
+    internal let fidelity26: HandAnchor.Fidelity26
     public var handSkeleton: CapturedHandSkeleton? { _handSkeleton() }
     private let _handSkeleton: @Sendable () -> CapturedHandSkeleton?
     public let isTracked: Bool
@@ -59,6 +65,15 @@ public struct CapturedHandAnchor: CapturableAnchor, HandAnchorRepresentable, Sen
     public init<T: HandAnchorRepresentable>(captured: T) {
         self.id = captured.id
         self.chirality = captured.chirality
+        if #available(visionOS 26.0, *) {
+            if let captured = captured as? (any HandAnchor26Representable) {
+                self.fidelity26 = captured.fidelity.fidelity26
+            } else {
+                self.fidelity26 = .high
+            }
+        } else {
+            self.fidelity26 = .high
+        }
         self._handSkeleton = {
             if let handSkeleton = captured.handSkeleton {
                 handSkeleton.captured
@@ -70,8 +85,9 @@ public struct CapturedHandAnchor: CapturableAnchor, HandAnchorRepresentable, Sen
         self.originFromAnchorTransform = captured.originFromAnchorTransform
     }
     
-    public init(id: UUID, chirality: HandAnchor.Chirality, handSkeleton: CapturedHandSkeleton?, isTracked: Bool, originFromAnchorTransform: simd_float4x4) {
+    public init(id: UUID, chirality: HandAnchor.Chirality, fidelity26: HandAnchor.Fidelity26 = .high, handSkeleton: CapturedHandSkeleton?, isTracked: Bool, originFromAnchorTransform: simd_float4x4) {
         self.id = id
+        self.fidelity26 = fidelity26
         self.chirality = chirality
         self._handSkeleton = { handSkeleton }
         self.isTracked = isTracked
@@ -79,6 +95,15 @@ public struct CapturedHandAnchor: CapturableAnchor, HandAnchorRepresentable, Sen
     }
     
     public var captured: Self { self }
+}
+
+@available(visionOS 26.0, *)
+extension CapturedHandAnchor {
+    public var fidelity: HandAnchor.Fidelity { fidelity26.fidelity }
+
+    public init(id: UUID, chirality: HandAnchor.Chirality, fidelity: HandAnchor.Fidelity, handSkeleton: CapturedHandSkeleton?, isTracked: Bool, originFromAnchorTransform: simd_float4x4) {
+        self.init(id: id, chirality: chirality, fidelity26: fidelity.fidelity26, handSkeleton: handSkeleton, isTracked: isTracked, originFromAnchorTransform: originFromAnchorTransform)
+    }
 }
 
 extension CapturedHandAnchor {
@@ -233,7 +258,12 @@ extension HandSkeleton.JointName {
 
 extension HandSkeletonRepresentable {
     public static var neutralPose: CapturedHandSkeleton {
+        #if os(visionOS)
         HandSkeleton.neutralPose.captured
+        #else
+        // Avoid infinite recursion
+        CapturedHandSkeleton(allJointTransforms: .init(repeating: .init(diagonal: [1,1,1,1]), count: HandSkeleton.JointName.allJointNames.count))
+        #endif
     }
     
     public var captured: CapturedHandSkeleton {
