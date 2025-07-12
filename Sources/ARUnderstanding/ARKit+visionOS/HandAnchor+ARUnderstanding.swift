@@ -13,6 +13,9 @@ import RealityKit
 extension HandAnchor: @retroactive Hashable {}
 extension HandAnchor: HandAnchorRepresentable {}
 
+@available(visionOS 26.0, *)
+extension HandAnchor: HandAnchor26Representable {}
+
 extension HandSkeleton: @retroactive Hashable {}
 extension HandSkeleton: HandSkeletonRepresentable {}
 
@@ -22,8 +25,43 @@ extension HandSkeleton.Joint: HandSkeletonJointRepresentable {
 }
 
 extension HandAnchor {
+    public enum Fidelity26: Sendable {
+        case nominal
+        case high
+    }
+    
+    public var fidelity26: Fidelity26 {
+        if #available(visionOS 26.0, *) {
+            fidelity.fidelity26
+        } else {
+            .high
+        }
+    }
+    
     public static var neutralPose: CapturedHandAnchor {
         CapturedHandAnchor(id: UUID(), chirality: .left, handSkeleton: .neutralPose, isTracked: false, originFromAnchorTransform: simd_float4x4(diagonal: SIMD4<Float>(repeating: 1)))
+    }
+}
+
+@available(visionOS 26.0, *)
+extension HandAnchor.Fidelity26 {
+    var fidelity: HandAnchor.Fidelity {
+        switch self {
+        case .high: .high
+        case .nominal: .nominal
+        @unknown default: .nominal
+        }
+    }
+}
+
+@available(visionOS 26.0, *)
+extension HandAnchor.Fidelity {
+    var fidelity26: HandAnchor.Fidelity26 {
+        switch self {
+        case .high: .high
+        case .nominal: .nominal
+        @unknown default: .nominal
+        }
     }
 }
 #else
@@ -35,6 +73,16 @@ public extension HandAnchor {
         case left
         case right
     }
+    enum Fidelity: Sendable {
+        case nominal
+        case high
+    }
+    typealias Fidelity26 = Fidelity
+}
+
+extension HandAnchor.Fidelity {
+    var fidelity: HandAnchor.Fidelity { self }
+    var fidelity26: HandAnchor.Fidelity26 { self }
 }
 
 extension HandSkeleton {
