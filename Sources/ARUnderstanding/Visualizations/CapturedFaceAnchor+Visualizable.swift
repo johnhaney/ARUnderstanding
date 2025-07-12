@@ -27,7 +27,7 @@ extension CapturedFaceAnchor: Visualizable {
     }
 }
 
-#warning("TODO: Implement mesh generation maybe")
+#warning("TODO: Implement proper mesh generation")
 
 @available(visionOS, introduced: 2.0)
 @available(iOS, introduced: 18.0)
