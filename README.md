@@ -97,11 +97,11 @@ for await anchor in ARUnderstanding(providers: [.hands(HandTrackingProvider())])
 
 Going forward, the version of this Swift Package will match the most recent OS version supported. We will endeavor to maintain forward and backward interoperability.
 
-| Version | Description |
-| ------- | ----------- |
-| 18.0.0  | supports pre-26 versions, with forward compatibility to process anchors captured on visionOS 26 |
-| 18.0.2  | link this Swift Package against all Apple platforms, including watchOS |
-| 26.0.0  | adds functionality introduced in visionOS 26, iOS 26, macOS 26, and tvOS 26 |
+| Xcode Version | ARUnderstanding Version | Description |
+| ------------- | ----------------------- | ----------- |
+| 16 | 18.0.0 | supports pre-26 versions, with forward compatibility to process anchors captured on visionOS 26 |
+|    | 18.0.2 | link this Swift Package against all Apple platforms, including watchOS |
+| 26 | 26.0.0 | adds functionality introduced in visionOS 26, iOS 26, macOS 26, and tvOS 26 |
 
 ## ARUnderstandingSession
 
