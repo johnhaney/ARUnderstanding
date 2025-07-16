@@ -28,6 +28,13 @@ public protocol HandAnchor26Representable: HandAnchorRepresentable {
     var fidelity: HandAnchor.Fidelity { get }
 }
 
+@available(visionOS 26.0, *)
+public extension HandAnchorRepresentable {
+    var fidelity: HandAnchor.Fidelity {
+        (self as? (any HandAnchor26Representable))?.fidelity ?? .high
+    }
+}
+
 extension HandAnchorRepresentable {
     var capturedHandSkeleton: CapturedHandSkeleton? {
         handSkeleton?.captured
