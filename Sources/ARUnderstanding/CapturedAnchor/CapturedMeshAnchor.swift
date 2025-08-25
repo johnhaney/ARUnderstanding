@@ -189,10 +189,10 @@ extension ShapeResource {
 #endif
 
 public struct CapturedMeshGeometry: Sendable {
-    let vertices: [SIMD3<Float>]
-    let normals: [SIMD3<Float>]
-    let triangles: [[UInt32]]
-    let classifications: [UInt8]?
+    public let vertices: [SIMD3<Float>]
+    public let normals: [SIMD3<Float>]
+    public let triangles: [[UInt32]]
+    public let classifications: [UInt8]?
         
     public init(vertices: [SIMD3<Float>], normals: [SIMD3<Float>], triangles: [[UInt32]], classifications: [UInt8]?) {
         self.vertices = vertices
@@ -238,7 +238,7 @@ public struct CapturedMeshGeometry: Sendable {
     @available(tvOS, introduced: 26.0)
     @available(macOS, introduced: 15.0)
     @available(watchOS, unavailable)
-    func mesh(name: String) async -> MeshResource? {
+    public func mesh(name: String) async -> MeshResource? {
         var mesh = MeshDescriptor(name: name)
         let faces = triangles.flatMap({ $0 })
         let positions = MeshBuffers.Positions(vertices)
@@ -267,7 +267,7 @@ public struct CapturedMeshGeometry: Sendable {
     @available(tvOS, introduced: 26.0)
     @available(macOS, introduced: 15.0)
     @available(watchOS, unavailable)
-    func shape() async throws -> ShapeResource {
+    public func shape() async throws -> ShapeResource {
         try await ShapeResource.generateStaticMesh(
             positions: vertices,
             faceIndices: triangles.flatMap({ $0 }).map(UInt16.init)
