@@ -62,22 +62,11 @@ extension AnchorRecorder {
             self.handTrackingProvider = handTrackingProvider
         }
         
-        var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedHandAnchor>> {
-            AsyncStream { continuation in
-                let task = Task {
-                    defer { continuation.finish() }
-                    for await update in handTrackingProvider.anchorUpdates {
-                        let captured = update.captured
-                        await recorder.record(anchor: update)
-                        continuation.yield(captured)
-                    }
-                }
-                continuation.onTermination = { @Sendable termination in
-                    switch termination {
-                    case .cancelled: task.cancel()
-                    default: break
-                    }
-                }
+        var anchorUpdates: AsyncSequence<CapturedAnchorUpdate<CapturedHandAnchor>, Never> {
+            handTrackingProvider.anchorUpdates.map { update in
+                let captured = update.captured
+                await recorder.record(anchor: update)
+                return captured
             }
         }
         

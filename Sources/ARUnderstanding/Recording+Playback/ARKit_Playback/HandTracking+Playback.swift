@@ -10,12 +10,14 @@
 import ARKit
 #endif
 
+@available(iOS 18.0, *)
 public protocol HandTrackingProviderRepresentable {
-    var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedHandAnchor>> { get }
+    var anchorUpdates: AsyncSequence<CapturedAnchorUpdate<CapturedHandAnchor>, Never> { get }
     var latestAnchors: ((any HandAnchorRepresentable)?, (any HandAnchorRepresentable)?) { get }
     var description: String { get }
 }
 
+@available(iOS 18.0, *)
 extension AnchorPlayback {
     final class HandTrackingPlaybackProvider: HandTrackingProviderRepresentable {
         var latestAnchors: ((any HandAnchorRepresentable)?, (any HandAnchorRepresentable)?) { (nil, nil) }
@@ -26,24 +28,8 @@ extension AnchorPlayback {
             self.playback = playback
         }
         
-        public var anchorUpdates: AsyncStream<CapturedAnchorUpdate<CapturedHandAnchor>> {
-            AsyncStream { continuation in
-                let handUpdates = playback.handUpdates
-                let task = Task {
-                    defer {
-                        continuation.finish()
-                    }
-                    for await update in handUpdates {
-                        continuation.yield(update)
-                    }
-                }
-                continuation.onTermination = { @Sendable termination in
-                    switch termination {
-                    case .cancelled: task.cancel()
-                    default: break
-                    }
-                }
-            }
+        public var anchorUpdates: AsyncSequence<CapturedAnchorUpdate<CapturedHandAnchor>, Never> {
+            playback.handUpdates
         }
         
         var description: String { "HandTrackingProvider+playback" }

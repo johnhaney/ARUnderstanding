@@ -20,6 +20,13 @@ final public class BodyTrackingProvider: AnchorCapturingDataProvider {
     
     var continuations: [UUID : AsyncStream<ARUnderstandingSession.Message>.Continuation] = [:]
     
+    func configure(_ configuration: inout ARBodyTrackingConfiguration) {
+        configuration.worldAlignment = .gravity
+        if configuration.frameSemantics.isEmpty {
+            configuration.frameSemantics = [.bodyDetection]
+        }
+    }
+    
     func configure(_ configuration: inout ARWorldTrackingConfiguration) {
         if configuration.frameSemantics.isEmpty {
             configuration.frameSemantics = [.bodyDetection]
@@ -30,7 +37,7 @@ final public class BodyTrackingProvider: AnchorCapturingDataProvider {
     
     public static var requiredAuthorizations: [ARKitSession.AuthorizationType] { [] }
     
-    public static var isSupported: Bool { true }
+    public static var isSupported: Bool { ARBodyTrackingConfiguration.isSupported }
     
     public var description: String { "BodyTrackingProvider" }
     

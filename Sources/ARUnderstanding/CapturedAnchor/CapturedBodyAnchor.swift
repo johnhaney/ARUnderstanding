@@ -14,12 +14,12 @@ import RealityKit
 #endif
 import simd
 
-protocol ARAnchorRepresentable {
+public protocol ARAnchorRepresentable {
     var identifier: UUID { get }
     var transform: simd_float4x4 { get }
 }
 
-protocol BodyAnchorRepresentable: ARAnchorRepresentable, Sendable {
+public protocol BodyAnchorRepresentable: ARAnchorRepresentable, Sendable {
     associatedtype BodySkeleton: BodySkeletonRepresentable
     var estimatedScaleFactor: Float { get }
     var skeleton: BodySkeleton { get }
@@ -42,14 +42,14 @@ extension BodySkeletonRepresentable {
 }
 
 public struct CapturedBodyAnchor: CapturableAnchor, BodyAnchorRepresentable, Sendable, Equatable {
-    typealias BodySkeleton = CapturedBodySkeleton
+    public typealias BodySkeleton = CapturedBodySkeleton
     
-    var estimatedScaleFactor: Float
+    public var estimatedScaleFactor: Float
     public var id: UUID
     public var originFromAnchorTransform: simd_float4x4
-    var identifier: UUID { id }
-    var transform: simd_float4x4 { originFromAnchorTransform }
-    var skeleton: CapturedBodySkeleton { _skeleton() }
+    public var identifier: UUID { id }
+    public var transform: simd_float4x4 { originFromAnchorTransform }
+    public var skeleton: CapturedBodySkeleton { _skeleton() }
     var _skeleton: @Sendable() -> CapturedBodySkeleton
     public var description: String { "Body \(originFromAnchorTransform)" }
     
@@ -85,12 +85,12 @@ public struct SavedBodyAnchor: CapturableAnchor, BodyAnchorRepresentable, Sendab
         hasher.combine(skeleton)
     }
     
-    var estimatedScaleFactor: Float
+    public var estimatedScaleFactor: Float
     public var id: UUID
     public var originFromAnchorTransform: simd_float4x4
-    var identifier: UUID { id }
-    var transform: simd_float4x4 { originFromAnchorTransform }
-    var skeleton: CapturedBodySkeleton
+    public var identifier: UUID { id }
+    public var transform: simd_float4x4 { originFromAnchorTransform }
+    public var skeleton: CapturedBodySkeleton
     public var description: String { "Body \(originFromAnchorTransform)" }
 
     init<T: BodySkeletonRepresentable>(identifier: UUID, transform: simd_float4x4, estimatedScaleFactor: Float, skeleton: T) {
