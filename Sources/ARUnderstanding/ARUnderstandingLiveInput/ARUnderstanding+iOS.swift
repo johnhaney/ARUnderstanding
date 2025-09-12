@@ -6,10 +6,62 @@
 //
 
 #if os(iOS)
+#if targetEnvironment(simulator)
+#else
 import Foundation
 import ARKit
 import RealityKit
 import OSLog
+
+@available(iOS 18.0, *)
+@available(visionOS, unavailable)
+@available(macOS, unavailable)
+@available(macCatalyst, unavailable)
+extension ARUnderstanding {
+    public static var bodyUpdates: AsyncStream<CapturedAnchorUpdate<CapturedBodyAnchor>> {
+        AsyncStream { continuation in
+            let task = Task {
+                for await anchor in ARUnderstanding(providers: [.body]).anchorUpdates {
+                    switch anchor {
+                    case .body(let bodyAnchor):
+                        continuation.yield(bodyAnchor)
+                    default:
+                        break
+                    }
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
+            }
+        }
+    }
+    
+    public static var planeUpdates: AsyncStream<CapturedAnchorUpdate<CapturedPlaneAnchor>> {
+        AsyncStream { continuation in
+            let task = Task {
+                for await anchor in ARUnderstanding(providers: [.planes]).anchorUpdates {
+                    switch anchor {
+                    case .plane(let planeAnchor):
+                        continuation.yield(planeAnchor)
+                    default:
+                        break
+                    }
+                }
+                continuation.finish()
+            }
+            continuation.onTermination = { @Sendable termination in
+                switch termination {
+                case .cancelled: task.cancel()
+                default: break
+                }
+            }
+        }
+    }
+}
 
 struct ARUnderstandingLiveInput: ARUnderstandingInput {
     private let providers: [ARProviderDefinition]
@@ -49,8 +101,10 @@ struct ARUnderstandingLiveInput: ARUnderstandingInput {
         }
     }
     
-    #if !targetEnvironment(macCatalyst)
     @available(iOS 18.0, *)
+    @available(visionOS, unavailable)
+    @available(macOS, unavailable)
+    @available(macCatalyst, unavailable)
     @MainActor private static func runSession(providers providerDefinitions: [ARProviderDefinition], logger: Logger, _ continuation: AsyncStream<ARUnderstandingSession.Message>.Continuation) async {
         logger.debug("ARU LiveInput: Run session...")
         let providers = providerDefinitions.map(\.provider)
@@ -86,7 +140,7 @@ struct ARUnderstandingLiveInput: ARUnderstandingInput {
     @available(iOS 18.0, *)
     private static func configuration(_ providers: [ARProvider]) -> ARConfiguration {
         switch (providers.count, providers.first) {
-        case (1, .body):
+        case (_, .body):
             bodyConfiguration(providers)
         case (_, _):
             worldConfiguration(providers)
@@ -117,7 +171,6 @@ struct ARUnderstandingLiveInput: ARUnderstandingInput {
         arSession.delegate = nil
         arSession.pause()
     }
-    #endif
 }
 
 @available(macCatalyst, unavailable)
@@ -155,4 +208,5 @@ class LiveARDelegate: NSObject, ARSessionDelegate {
         }
     }
 }
+#endif
 #endif

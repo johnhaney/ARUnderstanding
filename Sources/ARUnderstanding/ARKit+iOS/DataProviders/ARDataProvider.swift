@@ -38,7 +38,10 @@ extension AnchorCapturingDataProvider {
         let timestamp: TimeInterval = session.currentFrame?.timestamp ?? 0
 
         let filteredAnchors = anchors.compactMap { $0 as? AnchorType }
-        guard !filteredAnchors.isEmpty else { return }
+        guard !filteredAnchors.isEmpty
+        else {
+            return
+        }
         for anchor in filteredAnchors {
             if let captured = capture(anchor: anchor, timestamp: timestamp, event: .added) {
                 continuation.yield(.anchor(captured))

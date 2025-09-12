@@ -90,6 +90,7 @@ public class ARUnderstandingSession {
     
     /// Adds (or replaces) a set of inputs using ARUnderstanding providers specified
     /// - Parameter providers: list of ARProviderDefinition choices (ex. [.device, .mesh, .planes])
+#if !targetEnvironment(simulator)
     @available(visionOS, introduced: 2.0)
     @available(iOS, introduced: 18.0)
     @available(macOS, unavailable)
@@ -100,6 +101,7 @@ public class ARUnderstandingSession {
         let understanding = ARUnderstandingLiveInput(providers: providers, logger: logger)
         add(input: understanding, named: "ARUnderstanding")
     }
+#endif
     
     @MainActor public func remove(inputNamed name: String) {
         if let (input, inputTask) = self.inputs.removeValue(forKey: name) {

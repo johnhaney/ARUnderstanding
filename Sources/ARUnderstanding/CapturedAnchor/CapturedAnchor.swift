@@ -31,6 +31,46 @@ public enum CapturedAnchor: Sendable, Hashable, Equatable {
     case object(CapturedAnchorUpdate<CapturedObjectAnchor>)
 }
 
+extension CapturedAnchor {
+    @MainActor static var handMappings: [UUID: (UUID, UUID)] = [:]
+    @MainActor var uniqueId: UUID {
+        switch self {
+        case .hand(let capturedAnchorUpdate):
+            let mappings: (UUID, UUID)
+            if let existing = CapturedAnchor.handMappings[id] {
+                mappings = existing
+            } else {
+                mappings = (UUID(), UUID())
+                CapturedAnchor.handMappings[id] = mappings
+            }
+            switch capturedAnchorUpdate.anchor.chirality {
+            case .left:
+                return mappings.0
+            case .right:
+                return mappings.1
+            }
+        case .body:
+            return id
+        case .face:
+            return id
+        case .mesh:
+            return id
+        case .plane:
+            return id
+        case .image:
+            return id
+        case .world:
+            return id
+        case .device:
+            return id
+        case .room:
+            return id
+        case .object:
+            return id
+        }
+    }
+}
+
 protocol CapturedAnchorUpdateRepresentable {
     var timestamp: TimeInterval { get }
     var event: CapturedAnchorEvent { get }

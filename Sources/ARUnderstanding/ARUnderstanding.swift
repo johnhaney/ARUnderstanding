@@ -56,12 +56,18 @@ public class ARUnderstanding {
     }
     
     private func ensureSessionIsRunning() {
-        guard !Self.session.isRunning else { return }
+        guard !Self.session.isRunning
+        else {
+            return
+        }
         
         #if os(visionOS) || os(iOS)
+        #if targetEnvironment(simulator)
+        #else
         if #available(visionOS 2.0, iOS 18.0, *) {
             Self.session.add(input: ARUnderstandingLiveInput(providers: providers, logger: logger))
         }
+        #endif
         #endif
 
         Self.session.start()

@@ -40,9 +40,9 @@ public class ARUnderstandingVisualizer: ARUnderstandingOutput {
             await handleNewSession()
         case .anchor(let capturedAnchor):
             await handleAnchor(capturedAnchor)
-        case .authorizationDenied(let string):
+        case .authorizationDenied:
             break
-        case .trackingError(let string):
+        case .trackingError:
             break
         case .unknown:
             break
@@ -62,11 +62,11 @@ public class ARUnderstandingVisualizer: ARUnderstandingOutput {
     
     @MainActor public func handleAnchor(_ anchor: CapturedAnchor) async {
         guard anchor.event != .removed else { return }
-        if let existing = entities[anchor.id] {
+        if let existing = entities[anchor.uniqueId] {
             await anchor.visualize(in: existing, with: [anchor.defaultMaterial])
         } else {
             let entity = Entity()
-            entities[anchor.id] = entity
+            entities[anchor.uniqueId] = entity
             baseEntity.addChild(entity)
             await anchor.visualize(in: entity, with: [anchor.defaultMaterial])
         }
