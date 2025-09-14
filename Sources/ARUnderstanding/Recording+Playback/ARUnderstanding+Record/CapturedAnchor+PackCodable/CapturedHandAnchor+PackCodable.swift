@@ -25,12 +25,8 @@ extension HandAnchorRepresentable {
         }
         var output: Data = Data()
         output.append(try id.pack())
-        let fidelity: HandAnchor.Fidelity26
-        if #available(visionOS 26.0, *) {
-            fidelity = (self as? (any HandAnchor26Representable))?.fidelity.fidelity26 ?? .high
-        } else {
-            fidelity = .high
-        }
+        let fidelity: HandAnchor.Fidelity
+        fidelity = (self as? (any HandAnchorRepresentable))?.fidelity ?? .high
         let chiralityBit: UInt8
         switch chirality {
         case .left:
@@ -43,6 +39,8 @@ extension HandAnchorRepresentable {
         case .nominal:
             fidelityBit = 0b100
         case .high:
+            fidelityBit = 0b000
+        @unknown default:
             fidelityBit = 0b000
         }
         let chiralityFidelityByte: UInt8 = chiralityBit | fidelityBit
@@ -185,13 +183,13 @@ extension CapturedHandAnchor: PackDecodable {
         let (id, consumed) = try UUID.unpack(data: data)
         var offset = consumed
         let chirality: HandAnchor.Chirality
-        let fidelity26: HandAnchor.Fidelity26
+        let fidelity: HandAnchor.Fidelity
         
         let chiralityFidelityByte: UInt8 = data[data.startIndex + offset]
         offset += 1
         
         chirality = ((chiralityFidelityByte & 0b001) == 0b001) ? .left : .right
-        fidelity26 = ((chiralityFidelityByte & 0b100) == 0b100) ? .nominal : .high
+        fidelity = ((chiralityFidelityByte & 0b100) == 0b100) ? .nominal : .high
         
         let originFromAnchorTransform: simd_float4x4
         do {
@@ -210,7 +208,7 @@ extension CapturedHandAnchor: PackDecodable {
             CapturedHandAnchor(
                 id: id,
                 chirality: chirality,
-                fidelity26: fidelity26,
+                fidelity: fidelity,
                 handSkeleton: skeleton,
                 isTracked: true,
                 originFromAnchorTransform: originFromAnchorTransform
