@@ -114,7 +114,12 @@ public struct SavedHandSkeleton: HandSkeletonRepresentable, Sendable, Equatable 
     public private(set) var allJoints: [Joint]
     
     public func joint(_ named: HandSkeleton.JointName) -> Joint {
-        allJoints[named.allJointsIndex]
+        let jointByIndex = allJoints[named.allJointsIndex]
+        if jointByIndex.name != named,
+            let jointByName = allJoints.first(where: { $0.name == named }) {
+            return jointByName
+        }
+        return jointByIndex
     }
     
     init<Skeleton: HandSkeletonRepresentable>(captured: Skeleton) {
@@ -164,32 +169,32 @@ extension HandSkeleton.JointName {
     var allJointsIndex: Int {
         switch self {
         case .wrist: 0
-        case .forearmWrist: 1
-        case .forearmArm: 2
-        case .thumbKnuckle: 3
-        case .thumbIntermediateBase: 4
-        case .thumbIntermediateTip: 5
-        case .thumbTip: 6
-        case .indexFingerMetacarpal: 7
-        case .indexFingerKnuckle: 8
-        case .indexFingerIntermediateBase: 9
-        case .indexFingerIntermediateTip: 10
-        case .indexFingerTip: 11
-        case .middleFingerMetacarpal: 12
-        case .middleFingerKnuckle: 13
-        case .middleFingerIntermediateBase: 14
-        case .middleFingerIntermediateTip: 15
-        case .middleFingerTip: 16
-        case .ringFingerMetacarpal: 17
-        case .ringFingerKnuckle: 18
-        case .ringFingerIntermediateBase: 19
-        case .ringFingerIntermediateTip: 20
-        case .ringFingerTip: 21
-        case .littleFingerMetacarpal: 22
-        case .littleFingerKnuckle: 23
-        case .littleFingerIntermediateBase: 24
-        case .littleFingerIntermediateTip: 25
-        case .littleFingerTip: 26
+        case .forearmWrist: 25
+        case .forearmArm: 26
+        case .thumbKnuckle: 1
+        case .thumbIntermediateBase: 2
+        case .thumbIntermediateTip: 3
+        case .thumbTip: 4
+        case .indexFingerMetacarpal: 5
+        case .indexFingerKnuckle: 6
+        case .indexFingerIntermediateBase: 7
+        case .indexFingerIntermediateTip: 8
+        case .indexFingerTip: 9
+        case .middleFingerMetacarpal: 10
+        case .middleFingerKnuckle: 11
+        case .middleFingerIntermediateBase: 12
+        case .middleFingerIntermediateTip: 13
+        case .middleFingerTip: 14
+        case .ringFingerMetacarpal: 15
+        case .ringFingerKnuckle: 16
+        case .ringFingerIntermediateBase: 17
+        case .ringFingerIntermediateTip: 18
+        case .ringFingerTip: 19
+        case .littleFingerMetacarpal: 20
+        case .littleFingerKnuckle: 21
+        case .littleFingerIntermediateBase: 22
+        case .littleFingerIntermediateTip: 23
+        case .littleFingerTip: 24
         @unknown default: 0
         }
     }
