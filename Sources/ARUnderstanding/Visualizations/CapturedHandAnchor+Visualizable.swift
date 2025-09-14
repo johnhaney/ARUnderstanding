@@ -23,6 +23,26 @@ extension CapturedHandAnchor: Visualizable {
     }
     
     public func visualize(in rootEntity: Entity, with materials: [Material]) {
+        switch chirality {
+        case .left:
+            let left = rootEntity.findEntity(named: "left") ?? Entity()
+            if left.parent == nil {
+                left.name = "left"
+                rootEntity.addChild(left)
+            }
+            visualize(handIn: left, with: materials)
+        case .right:
+            let right = rootEntity.findEntity(named: "right") ?? Entity()
+            if right.parent == nil {
+                right.name = "right"
+                rootEntity.addChild(right)
+            }
+            visualize(handIn: right, with: materials)
+        }
+    }
+    
+    @MainActor
+    func visualize(handIn rootEntity: Entity, with materials: [Material]) {
         rootEntity.transform = Transform(matrix: self.originFromAnchorTransform)
         
         if !rootEntity.components.has(CapturedHandComponent.self) {
