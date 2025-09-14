@@ -43,6 +43,11 @@ extension HandAnchor {
     }
 }
 
+@available(visionOS, obsoleted: 26.0)
+extension HandAnchor {
+    public typealias Fidelity = Fidelity26
+}
+
 @available(visionOS 26.0, *)
 extension HandAnchor.Fidelity26 {
     var fidelity: HandAnchor.Fidelity {
