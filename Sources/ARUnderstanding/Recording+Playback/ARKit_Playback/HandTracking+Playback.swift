@@ -10,14 +10,14 @@
 import ARKit
 #endif
 
-@available(iOS 18.0, *)
+@available(iOS 18.0, tvOS 18.0, *)
 public protocol HandTrackingProviderRepresentable {
     var anchorUpdates: AsyncSequence<CapturedAnchorUpdate<CapturedHandAnchor>, Never> { get }
     var latestAnchors: ((any HandAnchorRepresentable)?, (any HandAnchorRepresentable)?) { get }
     var description: String { get }
 }
 
-@available(iOS 18.0, *)
+@available(iOS 18.0, tvOS 18.0, *)
 extension AnchorPlayback {
     final class HandTrackingPlaybackProvider: HandTrackingProviderRepresentable {
         var latestAnchors: ((any HandAnchorRepresentable)?, (any HandAnchorRepresentable)?) { (nil, nil) }

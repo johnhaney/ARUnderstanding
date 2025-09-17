@@ -17,7 +17,11 @@ public protocol ARUnderstandingOutput {
 
 public actor ARUnderstandingSession {
     private var base: AsyncStream<ARUnderstandingSession.Message>?
-    private var continuation: AsyncStream<ARUnderstandingSession.Message>.Continuation?
+    private var continuation: AsyncStream<ARUnderstandingSession.Message>.Continuation? {
+        didSet {
+            oldValue?.finish()
+        }
+    }
     
     private var inputs: [String: (ARUnderstandingInput, Task<(), Never>)]
     private var outputs: [String: (ARUnderstandingOutput, Task<(), Never>)]

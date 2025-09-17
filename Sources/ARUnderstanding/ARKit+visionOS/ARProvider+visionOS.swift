@@ -77,8 +77,10 @@ extension HandTrackingProvider: ARUnderstandingInput {
         AsyncStream { continuation in
             let task = Task {
                 for await update in anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(.anchor(.hand(update.captured)))
                 }
+                continuation.finish()
             }
             continuation.onTermination = { @Sendable termination in
                 switch termination {
@@ -95,8 +97,10 @@ extension ImageTrackingProvider: ARUnderstandingInput {
         AsyncStream { continuation in
             let task = Task {
                 for await update in anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(.anchor(.image(update.captured)))
                 }
+                continuation.finish()
             }
             continuation.onTermination = { @Sendable termination in
                 switch termination {
@@ -113,8 +117,10 @@ extension ObjectTrackingProvider: ARUnderstandingInput {
         AsyncStream { continuation in
             let task = Task {
                 for await update in anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(.anchor(.object(update.captured)))
                 }
+                continuation.finish()
             }
             continuation.onTermination = { @Sendable termination in
                 switch termination {
@@ -131,8 +137,11 @@ extension SceneReconstructionProvider: ARUnderstandingInput {
         AsyncStream { continuation in
             let task = Task {
                 for await update in anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(.anchor(.mesh(update.captured)))
                 }
+                continuation.finish()
+                
             }
             continuation.onTermination = { @Sendable termination in
                 switch termination {
@@ -149,8 +158,10 @@ extension PlaneDetectionProvider: ARUnderstandingInput {
         AsyncStream { continuation in
             let task = Task {
                 for await update in anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(.anchor(.plane(update.captured)))
                 }
+                continuation.finish()
             }
             continuation.onTermination = { @Sendable termination in
                 switch termination {
@@ -350,8 +361,10 @@ extension ARProvider {
         AsyncStream { continuation in
             let task = Task {
                 for await update in provider.anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(.hand(update.captured))
                 }
+                continuation.finish()
             }
             continuation.onTermination = { @Sendable termination in
                 switch termination {
@@ -366,8 +379,10 @@ extension ARProvider {
         AsyncStream { continuation in
             let task = Task {
                 for await update in provider.anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(.image(update.captured))
                 }
+                continuation.finish()
             }
             continuation.onTermination = { @Sendable termination in
                 switch termination {
@@ -382,8 +397,10 @@ extension ARProvider {
         AsyncStream { continuation in
             let task = Task {
                 for await update in provider.anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(.object(update.captured))
                 }
+                continuation.finish()
             }
             continuation.onTermination = { @Sendable termination in
                 switch termination {
@@ -398,8 +415,10 @@ extension ARProvider {
         AsyncStream { continuation in
             let task = Task {
                 for await update in provider.anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(.mesh(update.captured))
                 }
+                continuation.finish()
             }
             continuation.onTermination = { @Sendable termination in
                 switch termination {
@@ -414,8 +433,10 @@ extension ARProvider {
         AsyncStream { continuation in
             let task = Task {
                 for await update in provider.anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(.plane(update.captured))
                 }
+                continuation.finish()
             }
             continuation.onTermination = { @Sendable termination in
                 switch termination {
@@ -430,8 +451,10 @@ extension ARProvider {
         AsyncStream { continuation in
             let task = Task {
                 for await update in provider.anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(.world(update.captured))
                 }
+                continuation.finish()
             }
             let queryTask: Task<(), Never>?
             switch queryDevice {
@@ -469,8 +492,10 @@ extension ARProvider {
         AsyncStream { continuation in
             let task = Task {
                 for await update in provider.anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     continuation.yield(.room(update.captured))
                 }
+                continuation.finish()
             }
             continuation.onTermination = { @Sendable termination in
                 switch termination {
