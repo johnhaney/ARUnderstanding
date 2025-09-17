@@ -187,11 +187,11 @@ import Foundation
 import ARKit
 import OSLog
 
-struct ARUnderstandingLiveInput: ARUnderstandingInput {
+public struct ARUnderstandingLiveInput: ARUnderstandingInput {
     private let providers: [ARProviderDefinition]
     private let logger: Logger
 
-    init(providers: [ARProviderDefinition], logger: Logger) {
+    public init(providers: [ARProviderDefinition], logger: Logger = Logger(subsystem: "com.appsyoucanmake.ARUnderstanding", category: "ARUnderstandingLiveInput")) {
         self.providers = providers
         self.logger = logger
     }
@@ -200,7 +200,7 @@ struct ARUnderstandingLiveInput: ARUnderstandingInput {
         providers.map(\.provider)
     }
     
-    var messages: AsyncStream<ARUnderstandingSession.Message> {
+    public var messages: AsyncStream<ARUnderstandingSession.Message> {
         AsyncStream<ARUnderstandingSession.Message> { continuation in
             let providersRunning = providersFromDefinitions()
             guard !providersRunning.isEmpty,
