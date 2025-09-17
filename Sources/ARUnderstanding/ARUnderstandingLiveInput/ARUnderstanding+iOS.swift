@@ -22,6 +22,7 @@ extension ARUnderstanding {
         AsyncStream { continuation in
             let task = Task {
                 for await anchor in ARUnderstanding(providers: [.body]).anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     switch anchor {
                     case .body(let bodyAnchor):
                         continuation.yield(bodyAnchor)
@@ -44,6 +45,7 @@ extension ARUnderstanding {
         AsyncStream { continuation in
             let task = Task {
                 for await anchor in ARUnderstanding(providers: [.planes]).anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     switch anchor {
                     case .plane(let planeAnchor):
                         continuation.yield(planeAnchor)

@@ -11,6 +11,7 @@ extension ARUnderstanding {
         AsyncStream { continuation in
             let task = Task {
                 for await anchor in ARUnderstanding(providers: [.hands]).anchorUpdates {
+                    guard !Task.isCancelled else { break }
                     switch anchor {
                     case .hand(let handAnchor):
                         continuation.yield(handAnchor)
