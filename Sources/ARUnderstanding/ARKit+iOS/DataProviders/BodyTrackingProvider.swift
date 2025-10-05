@@ -28,6 +28,7 @@ final public class BodyTrackingProvider: AnchorCapturingDataProvider {
     }
     
     func configure(_ configuration: inout ARWorldTrackingConfiguration) {
+        configuration.worldAlignment = .gravity
         if configuration.frameSemantics.isEmpty {
             configuration.frameSemantics = [.bodyDetection]
         }

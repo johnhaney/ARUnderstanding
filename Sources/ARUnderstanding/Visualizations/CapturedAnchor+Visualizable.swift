@@ -16,7 +16,7 @@ import RealityKit
 @available(iOS, introduced: 18.0)
 @available(tvOS, introduced: 26.0)
 @available(macOS, introduced: 15.0)
-protocol Visualizable {
+public protocol Visualizable {
     @MainActor func visualize(in: Entity, with materials: [Material]) async
 }
 
@@ -97,7 +97,7 @@ extension CapturedAnchor: Visualizable {
 @available(tvOS, introduced: 26.0)
 @available(macOS, introduced: 15.0)
 extension CapturedAnchorUpdate: Visualizable where AnchorType: Visualizable {
-    func visualize(in rootEntity: Entity, with materials: [any Material]) async {
+    public func visualize(in rootEntity: Entity, with materials: [any Material]) async {
         await anchor.visualize(in: rootEntity, with: materials)
     }
 }

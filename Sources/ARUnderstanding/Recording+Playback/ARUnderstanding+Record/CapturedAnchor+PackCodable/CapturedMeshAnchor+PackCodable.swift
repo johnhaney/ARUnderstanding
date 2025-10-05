@@ -96,7 +96,7 @@ extension CapturedMeshAnchor.Geometry: PackDecodable {
         let numTriangles = counts[2]
         let numClassifications = counts[3]
         var offset = consumed
-        let nextDataNeeded = (numVertices * 3 * 12) + (numNormals * 3 * 12) + (numTriangles * 3 * 4) + numClassifications
+        let nextDataNeeded = (numVertices * 12) + (numNormals * 12) + (numTriangles * 12) + numClassifications
         guard data.count >= offset + nextDataNeeded
         else {
             throw UnpackError.needsMoreData(offset + nextDataNeeded)

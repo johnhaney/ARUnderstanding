@@ -122,7 +122,7 @@ extension CapturedRoomAnchor.ClassifiedGeometry: PackEncodable {
             }
         }
         do {
-            let classification = MeshAnchor.MeshClassification.floor
+            let classification = MeshAnchor.MeshClassification.wall
             let geometries = classifiedGeometries[classification] ?? []
             output.append(contentsOf: [classification.code])
             output.append(try geometries.count.pack())
@@ -136,8 +136,7 @@ extension CapturedRoomAnchor.ClassifiedGeometry: PackEncodable {
 
 extension CapturedRoomAnchor.ClassifiedGeometry: PackDecodable {
     public static func unpack(data: Data) throws -> (CapturedRoomAnchor.CapturedGeometries, Int) {
-        
-        let numberOfClassified = data[data.startIndex]
+        let numberOfClassified = data[data.startIndex] // should be 2, floor and walls
         var offset = 1
 
         var geometries: [MeshAnchor.MeshClassification : [CapturedMeshAnchor.Geometry]] = [:]
