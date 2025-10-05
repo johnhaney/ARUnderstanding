@@ -36,6 +36,11 @@ extension HandAnchorRepresentable {
     public static func == (lhs: Self, rhs: Self) -> Bool {
         lhs.id == rhs.id
     }
+    
+    public func jointPosition(named jointName: JointName) -> SIMD3<Float>? {
+        guard let joint = handSkeleton?.joint(jointName) else { return nil }
+        return Transform(matrix: originFromAnchorTransform * joint.anchorFromJointTransform).translation
+    }
 }
 
 #if os(visionOS)
@@ -122,12 +127,12 @@ public struct SavedHandSkeleton: HandSkeletonRepresentable, Sendable, Equatable 
         return jointByIndex
     }
     
-    init<Skeleton: HandSkeletonRepresentable>(captured: Skeleton) {
+    public init<Skeleton: HandSkeletonRepresentable>(captured: Skeleton) {
         allJoints = []
         allJoints = captured.allJoints.map({ $0.captured(self) })
     }
     
-    init(allJointTransforms jointTransforms: [simd_float4x4]) {
+    public init(allJointTransforms jointTransforms: [simd_float4x4]) {
         allJoints = []
 
         // Since we packed the joints in a particular order, we can decode the transforms for the parentFromJointTransform, but we don't map back to the parentJoint yet here. We will let the SavedHandSkeleton init do that last bit of work.
