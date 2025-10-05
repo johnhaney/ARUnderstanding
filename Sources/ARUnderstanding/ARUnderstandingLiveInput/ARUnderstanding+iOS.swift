@@ -161,6 +161,7 @@ struct ARUnderstandingLiveInput: ARUnderstandingInput {
     @available(iOS 18.0, *)
     private static func worldConfiguration(_ providers: [ARProvider]) -> ARWorldTrackingConfiguration {
         var worldConfig = ARWorldTrackingConfiguration()
+        worldConfig.worldAlignment = .gravity
         for provider in providers {
             provider.configure(&worldConfig)
         }
