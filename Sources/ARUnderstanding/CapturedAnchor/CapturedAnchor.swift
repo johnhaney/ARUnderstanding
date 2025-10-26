@@ -19,6 +19,7 @@ public protocol CapturableAnchor: Anchor, Hashable {
 }
 
 public enum CapturedAnchor: Sendable, Hashable, Equatable {
+    case accessory(CapturedAnchorUpdate<CapturedAccessoryAnchor>)
     case hand(CapturedAnchorUpdate<CapturedHandAnchor>)
     case body(CapturedAnchorUpdate<CapturedBodyAnchor>)
     case face(CapturedAnchorUpdate<CapturedFaceAnchor>)
@@ -35,6 +36,8 @@ extension CapturedAnchor {
     @MainActor static var handMappings: [UUID: (UUID, UUID)] = [:]
     @MainActor var uniqueId: UUID {
         switch self {
+        case .accessory(let capturedAnchorUpdate):
+            return id
         case .hand(let capturedAnchorUpdate):
             let mappings: (UUID, UUID)
             if let existing = CapturedAnchor.handMappings[id] {
@@ -115,6 +118,7 @@ public enum CapturedAnchorEvent: String, Sendable, Hashable {
 extension CapturedAnchor {
     private var anchor: any Anchor {
         switch self {
+        case .accessory(let update): update.anchor
         case .body(let update): update.anchor
         case .device(let update): update.anchor
         case .face(let update): update.anchor
@@ -130,6 +134,7 @@ extension CapturedAnchor {
     
     private var update: any CapturedAnchorUpdateRepresentable {
         switch self {
+        case .accessory(let update): update
         case .body(let update): update
         case .device(let update): update
         case .face(let update): update

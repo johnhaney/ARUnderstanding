@@ -234,12 +234,26 @@ public struct ARUnderstandingLiveInput: ARUnderstandingInput {
     
     private static func startSession(providers providerDefinitions: [ARProvider], logger: Logger, _ continuation: AsyncStream<ARUnderstandingSession.Message>.Continuation) async throws {
         let providers = providerDefinitions.map(\.dataProvider)
+        let dataProviders = providers.dataProviders
         let arSession = ARKitSession()
-        try await arSession.run(providers)
+        try await arSession.run(dataProviders)
         
-        for provider in providers {
+        for provider in dataProviders {
             Task {
                 for await update in provider.messages {
+                    switch update {
+                    case .newSession:
+                        break
+                    default:
+                        continuation.yield(update)
+                    }
+                }
+            }
+        }
+        
+        for input in providers.inputs {
+            Task {
+                for await update in input.messages {
                     switch update {
                     case .newSession:
                         break
@@ -252,8 +266,11 @@ public struct ARUnderstandingLiveInput: ARUnderstandingInput {
 
         Self.monitorSessionEvents(logger, arSession, continuation)
     }
+    
     private func runSession(_ providers: [ARProvider]) async throws {
     }
+    
+    var arSession: ARKitSession?
     
     private static func monitorSessionEvents(_ logger: Logger, _ arSession: ARKitSession, _ continuation: AsyncStream<ARUnderstandingSession.Message>.Continuation) {
         Task {

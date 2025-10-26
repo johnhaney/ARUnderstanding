@@ -62,6 +62,11 @@ extension CapturedAnchor: PackDecodable {
 extension CapturedAnchor: PackEncodable {
     public func pack() throws -> Data {
         switch self {
+        case .accessory(let update):
+            var output = try update.timestamp.pack()
+            output.append(contentsOf: [event.code, UInt8(11)])
+            output.append(try update.pack())
+            return output
         case .body(let update):
             var output = try update.timestamp.pack()
             output.append(contentsOf: [event.code, UInt8(10)])

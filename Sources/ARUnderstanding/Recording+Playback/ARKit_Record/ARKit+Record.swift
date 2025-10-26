@@ -8,6 +8,12 @@
 #if os(visionOS)
 import ARKit
 
+extension AccessoryTrackingProvider {
+    public func record(outputName: String? = nil) async -> AccessoryTrackingProviderRepresentable {
+        AnchorRecorder(outputName: outputName).accessoryTrackingProvider(self)
+    }
+}
+
 extension HandTrackingProvider {
     public func record(outputName: String? = nil) async -> HandTrackingProviderRepresentable {
         AnchorRecorder(outputName: outputName).handTrackingProvider(self)

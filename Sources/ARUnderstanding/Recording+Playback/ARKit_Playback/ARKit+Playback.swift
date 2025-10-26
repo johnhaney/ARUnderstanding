@@ -8,6 +8,12 @@
 #if os(visionOS)
 import ARKit
 
+extension AccessoryTrackingProvider {
+    public func playback(fileName: String) -> AccessoryTrackingProviderRepresentable {
+        return AnchorPlayback(fileName: fileName).accessoryTrackingProvider(self)
+    }
+}
+
 extension HandTrackingProvider {
     public func playback(fileName: String) -> HandTrackingProviderRepresentable {
         return AnchorPlayback(fileName: fileName).handTrackingProvider(self)
@@ -45,6 +51,10 @@ extension RoomTrackingProvider {
 }
 
 extension AnchorPlayback: ARKitRepresentable {
+    func accessoryTrackingProvider(_: AccessoryTrackingProvider) -> any AccessoryTrackingProviderRepresentable {
+        AnchorPlayback.AccessoryTrackingPlaybackProvider(playback: self)
+    }
+    
     func handTrackingProvider(_: HandTrackingProvider) -> any HandTrackingProviderRepresentable {
         AnchorPlayback.HandTrackingPlaybackProvider(playback: self)
     }

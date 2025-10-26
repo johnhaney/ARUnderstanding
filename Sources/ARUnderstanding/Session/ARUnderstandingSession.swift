@@ -131,8 +131,15 @@ public class ARUnderstandingSession {
     }
     
     @discardableResult
-    public func remove(outputNamed name: String) -> Bool {
-        self.outputs.removeValue(forKey: name) != nil
+    @MainActor public func remove(outputNamed name: String) -> Bool {
+        if let removed = self.outputs.removeValue(forKey: name) {
+            if self.outputs.isEmpty {
+                stop()
+            }
+            return true
+        } else {
+            return false
+        }
     }
     
     @MainActor public func start() {

@@ -32,6 +32,13 @@ extension CapturedAnchor: Visualizable {
 
     @MainActor public func visualize(in entity: Entity, with materials: [Material]) async {
         switch self {
+        case .accessory(let capturedAccessoryAnchor):
+            let accessoryEntity = entity.findEntity(named: capturedAccessoryAnchor.anchor.accessory.id.uuidString) ?? {
+                let e = Entity()
+                e.name = capturedAccessoryAnchor.anchor.accessory.id.uuidString
+                entity.addChild(e)
+                return e }()
+            await capturedAccessoryAnchor.visualize(in: accessoryEntity, with: materials)
         case .body(let capturedBodyAnchor):
             await capturedBodyAnchor.visualize(in: entity, with: materials)
         case .device(let capturedDeviceAnchor):
@@ -68,6 +75,8 @@ extension CapturedAnchor: Visualizable {
     
     public var defaultMaterial: Material {
         switch self {
+        case .accessory:
+            return SimpleMaterial(color: .white, isMetallic: false)
         case .body:
             return SimpleMaterial(color: .purple, isMetallic: false)
         case .device:

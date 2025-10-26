@@ -94,28 +94,32 @@ extension AnchorRecorder: ARUnderstandingOutput {
 import ARKit
 
 extension AnchorRecorder {
+    public func record(anchor: AnchorUpdate<AccessoryAnchor>) async {
+        await record(anchor: .accessory(anchor.captured))
+    }
+    
+    public func record(anchor: AnchorUpdate<DeviceAnchor>) async {
+        await record(anchor: .device(anchor.captured))
+    }
+    
     public func record(anchor: AnchorUpdate<HandAnchor>) async {
         await record(anchor: .hand(anchor.captured))
-    }
-    
-    public func record(anchor: AnchorUpdate<WorldAnchor>) async {
-        await record(anchor: .world(anchor.captured))
-    }
-    
-    public func record(anchor: AnchorUpdate<MeshAnchor>) async {
-        await record(anchor: .mesh(anchor.captured))
     }
     
     public func record(anchor: AnchorUpdate<ImageAnchor>) async {
         await record(anchor: .image(anchor.captured))
     }
     
+    public func record(anchor: AnchorUpdate<MeshAnchor>) async {
+        await record(anchor: .mesh(anchor.captured))
+    }
+    
     public func record(anchor: AnchorUpdate<PlaneAnchor>) async {
         await record(anchor: .plane(anchor.captured))
     }
     
-    public func record(anchor: AnchorUpdate<DeviceAnchor>) async {
-        await record(anchor: .device(anchor.captured))
+    public func record(anchor: AnchorUpdate<WorldAnchor>) async {
+        await record(anchor: .world(anchor.captured))
     }
 }
 #endif

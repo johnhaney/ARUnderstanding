@@ -12,28 +12,36 @@ import RealityKit
 import QuartzCore
 
 public enum ARProvider: Sendable {
+    case accessories(ARUnderstandingAccessoryTrackingProvider)
     case hands(HandTrackingProvider)
-    case meshes(SceneReconstructionProvider)
-    case planes(PlaneDetectionProvider)
     case image(ImageTrackingProvider)
+    case meshes(SceneReconstructionProvider)
     case object(ObjectTrackingProvider)
+    case planes(PlaneDetectionProvider)
     case room(RoomTrackingProvider)
     case world(WorldTrackingProvider, QueryDeviceAnchor)
 }
 
 public enum ARProviderDefinition: Equatable {
-    case hands
     case device
+    case hands
+    case image(resourceGroupName: String)
     case meshes
     case unclassifiedMeshes
+    case object(referenceObjects: [ReferenceObject])
     case planes
-    case verticalPlanes
     case horizontalPlanes
     case slantedPlanes
+    case verticalPlanes
     case room
-    case image(resourceGroupName: String)
-    case object(referenceObjects: [ReferenceObject])
+    case spatialControllers
+    case spatialStylus
     case world
+}
+
+public enum AccessoryCategory: Sendable {
+    case spatialControllers
+    case spatialStylus
 }
 
 public enum QueryDeviceAnchor: Sendable {
@@ -44,30 +52,34 @@ public enum QueryDeviceAnchor: Sendable {
 extension ARProviderDefinition {
     var provider: ARProvider {
         switch self {
-        case .hands:
-            .hands(HandTrackingProvider())
         case .device:
             .world(WorldTrackingProvider(), .enabled)
+        case .hands:
+            .hands(HandTrackingProvider())
+        case .image(let resourceGroupName):
+            .image(ImageTrackingProvider(referenceImages: ReferenceImage.loadReferenceImages(inGroupNamed: resourceGroupName)))
         case .meshes:
             .meshes(SceneReconstructionProvider(modes: [.classification]))
         case .unclassifiedMeshes:
             .meshes(SceneReconstructionProvider())
+        case .object(let referenceObjects):
+                .object(ObjectTrackingProvider(referenceObjects: referenceObjects))
         case .planes:
                 .planes(PlaneDetectionProvider(alignments: [.horizontal, .vertical, .slanted]))
-        case .verticalPlanes:
-            .planes(PlaneDetectionProvider(alignments: [.vertical]))
         case .horizontalPlanes:
             .planes(PlaneDetectionProvider(alignments: [.horizontal]))
         case .slantedPlanes:
             .planes(PlaneDetectionProvider(alignments: [.slanted]))
-        case .image(let resourceGroupName):
-            .image(ImageTrackingProvider(referenceImages: ReferenceImage.loadReferenceImages(inGroupNamed: resourceGroupName)))
-        case .object(let referenceObjects):
-                .object(ObjectTrackingProvider(referenceObjects: referenceObjects))
-        case .world:
-            .world(WorldTrackingProvider(), .none)
+        case .verticalPlanes:
+            .planes(PlaneDetectionProvider(alignments: [.vertical]))
         case .room:
             .room(RoomTrackingProvider())
+        case .spatialControllers:
+                .accessories(ARUnderstandingAccessoryTrackingProvider(accessoryCategories: [.spatialControllers]))
+        case .spatialStylus:
+            .accessories(ARUnderstandingAccessoryTrackingProvider(accessoryCategories: [.spatialStylus]))
+        case .world:
+            .world(WorldTrackingProvider(), .none)
         }
     }
 }
@@ -173,6 +185,7 @@ extension PlaneDetectionProvider: ARUnderstandingInput {
     }
 }
 
+protocol ARUnderstandingInputProvider: ARUnderstandingInput, Sendable {}
 protocol DataInputProvider: DataProvider, ARUnderstandingInput, Sendable {}
 
 extension HandTrackingProvider: DataInputProvider {}
@@ -248,6 +261,8 @@ extension RoomTrackingProvider {
 extension ARProvider: ARUnderstandingInput {
     public var messages: AsyncStream<ARUnderstandingSession.Message> {
         switch self {
+        case .accessories(let provider):
+            provider.messages
         case .hands(let provider):
             provider.messages
         case .image(let provider):
@@ -267,92 +282,134 @@ extension ARProvider: ARUnderstandingInput {
     
     nonisolated func matches(rhs: ARProvider) -> Bool {
         switch (self, rhs) {
+        case (.accessories, .accessories):
+            return true
         case (.hands, .hands):
-            return true
-        case (.meshes, .meshes):
-            return true
-        case (.planes, .planes):
             return true
         case (.image, .image):
             return true
-        case (.world, .world):
-            return true
-        case (.room, .room):
+        case (.meshes, .meshes):
             return true
         case (.object, .object):
             return true
+        case (.planes, .planes):
+            return true
+        case (.room, .room):
+            return true
+        case (.world, .world):
+            return true
+        case (.accessories, _):
+            return false
         case (.hands, _):
-            return false
-        case (.meshes, _):
-            return false
-        case (.planes, _):
             return false
         case (.image, _):
             return false
-        case (.world, _):
+        case (.meshes, _):
+            return false
+        case (.object, _):
+            return false
+        case (.planes, _):
             return false
         case (.room, _):
             return false
-        case (.object, _):
+        case (.world, _):
             return false
         }
     }
     
     var isReadyToRun: Bool {
         switch self {
+        case .accessories(let accessoryTrackingProvider):
+            return true
         case .hands(let handTrackingProvider):
             return handTrackingProvider.state == .initialized
-        case .meshes(let sceneReconstructionProvider):
-            return sceneReconstructionProvider.state == .initialized
-        case .planes(let planeDetectionProvider):
-            return planeDetectionProvider.state == .initialized
         case .image(let imageTrackingProvider):
             return imageTrackingProvider.state == .initialized
+        case .meshes(let sceneReconstructionProvider):
+            return sceneReconstructionProvider.state == .initialized
         case .object(let objectTrackingProvider):
             return objectTrackingProvider.state == .initialized
-        case .world(let worldTrackingProvider, _):
-            return worldTrackingProvider.state == .initialized
+        case .planes(let planeDetectionProvider):
+            return planeDetectionProvider.state == .initialized
         case .room(let roomTrackingProvider):
             return roomTrackingProvider.state == .initialized
+        case .world(let worldTrackingProvider, _):
+            return worldTrackingProvider.state == .initialized
         }
     }
     
     var isSupported: Bool {
         switch self {
+        case .accessories(_):
+            return AccessoryTrackingProvider.isSupported
         case .hands(_):
             return HandTrackingProvider.isSupported
-        case .meshes(_):
-            return SceneReconstructionProvider.isSupported
-        case .planes(_):
-            return PlaneDetectionProvider.isSupported
         case .image(_):
             return ImageTrackingProvider.isSupported
+        case .meshes(_):
+            return SceneReconstructionProvider.isSupported
         case .object(_):
             return ObjectTrackingProvider.isSupported
-        case .world(_, _):
-            return WorldTrackingProvider.isSupported
+        case .planes(_):
+            return PlaneDetectionProvider.isSupported
         case .room(_):
             return RoomTrackingProvider.isSupported
+        case .world(_, _):
+            return WorldTrackingProvider.isSupported
         }
     }
     
-    var dataProvider: DataInputProvider {
-        switch self {
-        case .hands(let handTrackingProvider):
-            return handTrackingProvider
-        case .meshes(let sceneReconstructionProvider):
-            return sceneReconstructionProvider
-        case .planes(let planeDetectionProvider):
-            return planeDetectionProvider
-        case .image(let imageTrackingProvider):
-            return imageTrackingProvider
-        case .object(let objectTrackingProvider):
-            return objectTrackingProvider
-        case .world(let worldTrackingProvider, _):
-            return worldTrackingProvider
-        case .room(let roomTrackingProvider):
-            return roomTrackingProvider
+    enum InputType {
+        case dataProvider(DataInputProvider)
+        case input(ARUnderstandingInputProvider)
+        
+        var dataProvider: DataInputProvider? {
+            switch self {
+            case .dataProvider(let dataProvider):
+                dataProvider
+            case .input:
+                nil
+            }
         }
+        var input: ARUnderstandingInputProvider? {
+            switch self {
+            case .dataProvider:
+                nil
+            case .input(let input):
+                input
+            }
+        }
+    }
+    
+    var dataProvider: InputType {
+        switch self {
+        case .accessories(let accessoryTrackingProvider):
+            return .input(accessoryTrackingProvider)
+        case .hands(let handTrackingProvider):
+            return .dataProvider(handTrackingProvider)
+        case .image(let imageTrackingProvider):
+            return .dataProvider(imageTrackingProvider)
+        case .meshes(let sceneReconstructionProvider):
+            return .dataProvider(sceneReconstructionProvider)
+        case .object(let objectTrackingProvider):
+            return .dataProvider(objectTrackingProvider)
+        case .planes(let planeDetectionProvider):
+            return .dataProvider(planeDetectionProvider)
+        case .room(let roomTrackingProvider):
+            return .dataProvider(roomTrackingProvider)
+        case .world(let worldTrackingProvider, _):
+            return .dataProvider(worldTrackingProvider)
+        }
+    }
+}
+
+extension Array where Element == ARProvider.InputType {
+    var dataProviders: [DataInputProvider] {
+        compactMap(\.dataProvider)
+    }
+    
+    var inputs: [ARUnderstandingInputProvider] {
+        compactMap(\.input)
     }
 }
 
